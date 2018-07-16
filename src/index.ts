@@ -73,10 +73,11 @@ before(async function() {
 // Quit the webdriver and stop serving files, unless we failed and --no-exit is given.
 after(async function() {
   let countFailed = 0;
-  this.test.parent.eachTest((test: any) => { countFailed += test.state === 'failed' ? 1 : 0; });
+  const testParent = this.test!.parent!;
+  testParent.eachTest((test: any) => { countFailed += test.state === 'failed' ? 1 : 0; });
   if (countFailed > 0 && noexit) {
     const files = new Set<string>();
-    this.test.parent.eachTest((test: any) => { if (test.state === 'failed') { files.add(test.file); }});
+    testParent.eachTest((test: any) => { if (test.state === 'failed') { files.add(test.file); }});
 
     // Wait a bit to let mocha print out its errors before REPL prints its prompts.
     await new Promise((resolve) => setTimeout(resolve, 50));

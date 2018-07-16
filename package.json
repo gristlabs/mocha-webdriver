@@ -4,6 +4,8 @@
   "description": "Write Mocha style tests using selenium-webdriver, with many conveniences.",
   "main": "dist/index",
   "scripts": {
+    "build": "tsc",
+    "lint": "tslint -p .",
     "test": "mocha test/"
   },
   "repository": {
