@@ -1,1 +1,2 @@
 --compilers ts:ts-node/register
+--no-deprecation

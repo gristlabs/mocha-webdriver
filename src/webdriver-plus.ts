@@ -103,8 +103,8 @@ Object.assign(WebElement.prototype, {
     return this.getDriver().wait(condition, timeoutSec * 1000, message);
   },
 
-  findContent(this: WebDriver, selector: string, contentRE: RegExp): WebElementPromise {
-    return new WebElementPromise(this, findContentHelper(this, selector, contentRE));
+  findContent(this: WebElement, selector: string, contentRE: RegExp): WebElementPromise {
+    return new WebElementPromise(this.getDriver(), findContentHelper(this, selector, contentRE));
   },
 
   doClick(this: WebElement): WebElementPromise {

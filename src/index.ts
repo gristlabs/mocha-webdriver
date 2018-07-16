@@ -79,8 +79,9 @@ after(async function() {
     const files = new Set<string>();
     testParent.eachTest((test: any) => { if (test.state === 'failed') { files.add(test.file); }});
 
-    // Wait a bit to let mocha print out its errors before REPL prints its prompts.
-    await new Promise((resolve) => setTimeout(resolve, 50));
+    // This is an intentional floating promise, it keeps the process running, and takes care of
+    // exiting when appropriate.
+    // tslint:disable-next-line:no-floating-promises
     startRepl(Array.from(files));
   } else {
     await cleanup();
@@ -94,7 +95,10 @@ async function cleanup() {
   await Promise.all(Array.from(_servers, (server) => server.stop()));
 }
 
-function startRepl(files: string[]) {
+async function startRepl(files: string[]) {
+  // Wait a bit to let mocha print out its errors before REPL prints its prompts.
+  await new Promise((resolve) => setTimeout(resolve, 50));
+
   // Continue running by keeping server and webdriver, and waiting for an hour.
   // tslint:disable:no-console
   console.log("Not exiting. Abort with Ctrl-C, or type '.exit'");
