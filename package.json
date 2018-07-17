@@ -3,11 +3,15 @@
   "version": "0.1.0",
   "description": "Write Mocha style tests using selenium-webdriver, with many conveniences.",
   "main": "dist/index",
+  "typings": "dist/index",
   "scripts": {
     "build": "tsc",
     "lint": "tslint -p .",
     "test": "mocha test/"
   },
+  "files": [
+    "dist/"
+  ],
   "repository": {
     "type": "git",
     "url": "git+https://github.com/gristlabs/mocha-webdriver.git"

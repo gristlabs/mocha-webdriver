@@ -7,13 +7,13 @@
     "declaration": true,
     "sourceMap": true,
     "outDir": "dist",
+    "rootDir": "src",
     "module": "commonjs",
     "plugins": [{
       "name": "tslint-language-service"
     }]
   },
   "include": [
-    "src/",
-    "test/"
+    "src/"
   ]
 }
