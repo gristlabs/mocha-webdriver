@@ -1,8 +1,6 @@
 import * as path from 'path';
 import {assert, driver} from '../src';
 
-// TODO: do NOT use  about:blank, but some real blank page from FS.
-
 describe('webdriver-plus', () => {
   describe('find methods', function() {
     function createDom() {

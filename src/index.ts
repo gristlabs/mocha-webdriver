@@ -17,6 +17,12 @@ chai.use(chaiAsPromised);
 export {assert} from 'chai';
 
 /**
+ * Everything is re-exported from selenium-webdriver. This way, you can do e.g.
+ *    import {assert, driver, WebElement} from 'mocha-webdriver';
+ */
+export * from 'selenium-webdriver';
+
+/**
  * Use `import {driver} from 'webdriver-mocha'. Note that it's already enhanced with extra methods
  * by "webdriver-plus" module.
  */
