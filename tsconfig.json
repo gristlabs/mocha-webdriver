@@ -1,0 +1,19 @@
+{
+  "compilerOptions": {
+    "target": "es2017",
+    "strict": true,
+    "noImplicitAny": true,
+    "noUnusedLocals": true,
+    "declaration": true,
+    "sourceMap": true,
+    "outDir": "dist",
+    "rootDir": "src",
+    "module": "commonjs",
+    "plugins": [{
+      "name": "tslint-language-service"
+    }]
+  },
+  "include": [
+    "src/"
+  ]
+}
