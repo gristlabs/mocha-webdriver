@@ -23,7 +23,7 @@ import * as path from 'path';
 describe('fooTest', function() {
   before(async function() {
     this.timeout(20000);
-    await driver.get(`file://${path.resolve(__dirname)}/fooTestPage.html');
+    await driver.get(`file://${path.resolve(__dirname)}/fooTestPage.html`);
   });
 
   it('should say Hello World', async function() {
