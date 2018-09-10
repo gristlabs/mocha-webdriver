@@ -18,7 +18,10 @@ export interface IFindInterface {
   /**
    * Shorthand to find all element matching a css selector.
    */
-  findAll(selector: string): promise.Promise<WebElement[]>;
+  findAll<T>(
+    selector: string,
+    mapper?: (e: WebElement) => promise.Promise<T>
+  ): Promise<WebElement[]|T[]>;
 
   /**
    * Find elements by a css selector, and filter by getText() matching the given regex.
@@ -74,8 +77,13 @@ Object.assign(WebDriver.prototype, {
     return this.findElement(By.css(selector));
   },
 
-  findAll(this: WebDriver, selector: string): promise.Promise<WebElement[]> {
-    return this.findElements(By.css(selector));
+  async findAll<T>(
+    this: WebDriver,
+    selector: string,
+    mapper?: (e: WebElement) => promise.Promise<T>
+  ): Promise<WebElement[]|T[]> {
+    const elems = await this.findElements(By.css(selector));
+    return mapper ? Promise.all(elems.map(mapper)) : elems;
   },
 
   findWait(this: WebDriver, timeoutSec: number, selector: string, message?: string): WebElementPromise {
@@ -93,8 +101,13 @@ Object.assign(WebElement.prototype, {
     return this.findElement(By.css(selector));
   },
 
-  findAll(this: WebElement, selector: string): promise.Promise<WebElement[]> {
-    return this.findElements(By.css(selector));
+  async findAll<T>(
+    this: WebElement,
+    selector: string,
+    mapper?: (e: WebElement) => promise.Promise<T>
+  ): Promise<WebElement[]|T[]> {
+    const elems = await this.findElements(By.css(selector));
+    return mapper ? Promise.all(elems.map(mapper)) : elems;
   },
 
   findWait(this: WebElement, timeoutSec: number, selector: string, message?: string): WebElementPromise {
