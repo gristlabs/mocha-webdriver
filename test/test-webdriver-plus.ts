@@ -36,7 +36,7 @@ describe('webdriver-plus', () => {
     });
 
     it('should find all matches with driver.findAll()', async function() {
-      const elems = await driver.findAll('.cls1') as WebElement[];
+      const elems = await driver.findAll('.cls1');
       assert.deepEqual(await Promise.all(elems.map((e: WebElement) => e.getText())), ['World!', 'OK', 'Bye']);
       const elemsMapped = await driver.findAll('.cls1', (e: WebElement) => e.getText());
       assert.deepEqual(elemsMapped, ['World!', 'OK', 'Bye']);
@@ -44,7 +44,7 @@ describe('webdriver-plus', () => {
 
     it('should find all children with element.findAll()', async function() {
       const root = await driver.find("#id1");
-      const elems = await root.findAll('.cls1') as WebElement[];
+      const elems = await root.findAll('.cls1');
       assert.deepEqual(await Promise.all(elems.map((e: WebElement) => e.getText())), ['World!', 'OK']);
       const elemsMapped = await root.findAll('.cls1', (e: WebElement) => e.getText());
       assert.deepEqual(elemsMapped, ['World!', 'OK']);

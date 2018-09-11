@@ -16,12 +16,20 @@ export interface IFindInterface {
   findWait(timeoutSec: number, selector: string, message?: string): WebElementPromise;
 
   /**
-   * Shorthand to find all element matching a css selector.
+   * Shorthand to find all elements matching a css selector.
+   */
+  findAll(
+    selector: string,
+  ): Promise<WebElement[]>;
+
+  /**
+   * Shorthand to find all elements matching a css selector and to apply a mapper to each
+   * of the found elements. e.g. findAll('a', (el) => el.getAttribute('href'))
    */
   findAll<T>(
     selector: string,
-    mapper?: (e: WebElement) => promise.Promise<T>
-  ): Promise<WebElement[]|T[]>;
+    mapper: (e: WebElement) => promise.Promise<T>
+  ): Promise<T[]>;
 
   /**
    * Find elements by a css selector, and filter by getText() matching the given regex.
