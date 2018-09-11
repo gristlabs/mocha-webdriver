@@ -18,18 +18,13 @@ export interface IFindInterface {
   /**
    * Shorthand to find all elements matching a css selector.
    */
-  findAll(
-    selector: string,
-  ): Promise<WebElement[]>;
+  findAll(selector: string): Promise<WebElement[]>;
 
   /**
    * Shorthand to find all elements matching a css selector and to apply a mapper to each
    * of the found elements. e.g. findAll('a', (el) => el.getAttribute('href'))
    */
-  findAll<T>(
-    selector: string,
-    mapper: (e: WebElement) => promise.Promise<T>
-  ): Promise<T[]>;
+  findAll<T>(selector: string, mapper: (e: WebElement) => promise.Promise<T>): Promise<T[]>;
 
   /**
    * Find elements by a css selector, and filter by getText() matching the given regex.
