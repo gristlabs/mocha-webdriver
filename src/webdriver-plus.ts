@@ -65,13 +65,16 @@ declare module "selenium-webdriver" {
   }
 }
 
-async function findContentHelper(finder: WebDriver|WebElement,
+async function findContentHelper(driver: WebDriver, finder: WebElement|null,
                                  selector: string, contentRE: RegExp): Promise<WebElement> {
-  const elements = await finder.findElements(By.css(selector));
-  const allText = await Promise.all(elements.map((e) => e.getText()));
-  const elem = elements.find((el, index) => contentRE.test(allText[index]));
-  if (!elem) { throw new Error(`None of ${elements.length} elements match ${contentRE}`); }
-  return elem;
+  return await driver.executeScript<WebElement>( () => {
+    const finder = (arguments[0] || window.document);
+    const elements = [...finder.querySelectorAll(arguments[1])];
+    const contentRE = new RegExp(arguments[2]);
+    const found = elements.find((el) => contentRE.test(el.innerText));
+    if (!found) { throw new Error(`None of ${elements.length} elements match ${contentRE}`); }
+    return found;
+  }, finder, selector, contentRE.source);
 }
 
 // Enhance WebDriver to implement IWebDriverPlus interface.
@@ -94,7 +97,7 @@ Object.assign(WebDriver.prototype, {
   },
 
   findContent(this: WebDriver, selector: string, contentRE: RegExp): WebElementPromise {
-    return new WebElementPromise(this, findContentHelper(this, selector, contentRE));
+    return new WebElementPromise(this, findContentHelper(this, null, selector, contentRE));
   },
 });
 
@@ -120,7 +123,7 @@ Object.assign(WebElement.prototype, {
   },
 
   findContent(this: WebElement, selector: string, contentRE: RegExp): WebElementPromise {
-    return new WebElementPromise(this.getDriver(), findContentHelper(this, selector, contentRE));
+    return new WebElementPromise(this.getDriver(), findContentHelper(this.getDriver(), this, selector, contentRE));
   },
 
   doClick(this: WebElement): WebElementPromise {
