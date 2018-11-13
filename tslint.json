@@ -18,6 +18,7 @@
     "object-literal-sort-keys": false,
     "only-arrow-functions": false,
     "quotemark": false,
+    "trailing-comma": [true, {"multiline": "ignore", "singleline": "never"}],
     "variable-name": [true, "ban-keywords", "check-format", "allow-leading-underscore", "allow-pascal-case"],
     "no-floating-promises": true
   },

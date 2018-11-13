@@ -66,8 +66,10 @@ describe('webdriver-plus', () => {
   describe('WebElement', function() {
     function createDom() {
       document.body.innerHTML = `
+        <style>#btn:hover { background-color: pink; color: green; }</style>
         <div id="id1" class="cls0 test0">
           <input id="inp" type="text">
+          <button id="btn">Hello</button>
         </div>
       `;
     }
@@ -97,6 +99,29 @@ describe('webdriver-plus', () => {
     it('should return something useful in describe()', async function() {
       assert.match(await driver.find('#inp').describe(), /input#inp\[.*\]/);
       assert.match(await driver.find('#id1').describe(), /div#id1.cls0.test0\[.*\]/);
+    });
+
+    it('should fix issue with getRect swallowing errors', async function() {
+      assert.containsAllKeys(await driver.find('#inp').getRect(), ['x', 'y']);
+      await assert.isRejected(driver.find('#non-existent').getRect(), /Unable to locate/);
+    });
+
+    it('should return ClientRect using rect() method', async function() {
+      const r = await driver.find('#inp').rect();
+      assert.isAbove(r.left, 0);
+      assert.isAbove(r.width, 0);
+      assert.isAbove(r.top, 0);
+      assert.isAbove(r.height, 0);
+      assert.equal(r.left + r.width, r.right);
+      assert.equal(r.top + r.height, r.bottom);
+    });
+
+    it('should move mouse to an element using mouseMove() method', async function() {
+      assert.equal(await driver.find('#btn').getCssValue('color'), 'rgb(0, 0, 0)');
+      await driver.find('#btn').mouseMove();
+      assert.equal(await driver.find('#btn').getCssValue('color'), 'rgb(0, 128, 0)');
+      await driver.find('#btn').mouseMove({x: 100});
+      assert.equal(await driver.find('#btn').getCssValue('color'), 'rgb(0, 0, 0)');
     });
   });
 });

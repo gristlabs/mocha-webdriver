@@ -1,6 +1,10 @@
 import {By, promise, until, WebDriver,
         WebElement, WebElementCondition, WebElementPromise} from 'selenium-webdriver';
 
+// TODO: This is needed for the getRect() fix (see below).
+// tslint:disable-next-line:no-var-requires
+const command = require('selenium-webdriver/lib/command');
+
 /**
  * This is implemented by both the WebDriver, and individual WebElements.
  */
@@ -56,6 +60,16 @@ declare module "selenium-webdriver" {
 
     // Returns a human-friendly description of this element.
     describe(): Promise<string>;
+
+    // Selenium typings are missing this method, as of Nov'18.
+    getRect(): Promise<{width: number, height: number, x: number, y: number}>;
+
+    // Returns a ClientRect describing this element's location and size.
+    rect(): ClientRect;
+
+    // Shortcut to perform an action moving the mouse to the middle of this element. If x and/or y
+    // are given, they are offsets from the element's center.
+    mouseMove(params?: {x?: number, y?: number}): WebElementPromise;
   }
 
   // These are just missing typings.
@@ -63,6 +77,19 @@ declare module "selenium-webdriver" {
     getBrowserName(): string|undefined;
     getPlatform(): string|undefined;
   }
+}
+
+/**
+ * Represents a ClientRect obtained via selenium-webdriver.
+ */
+class WebElementRect implements ClientRect {
+  constructor(public readonly rect: {width: number, height: number, x: number, y: number}) {}
+  get width(): number { return this.rect.width; }
+  get height(): number { return this.rect.height; }
+  get top(): number { return this.rect.y; }
+  get bottom(): number { return this.rect.y + this.rect.height; }
+  get left(): number { return this.rect.x; }
+  get right(): number { return this.rect.x + this.rect.width; }
 }
 
 async function findContentHelper(driver: WebDriver, finder: WebElement|null,
@@ -150,5 +177,22 @@ Object.assign(WebElement.prototype, {
     const idStr = id ? '#' + id : '';
     const classes = classAttr ? '.' + classAttr.replace(/ /g, '.') : '';
     return `${tagName}${idStr}${classes}[${elemId}]`;
+  },
+
+  // As of 4.0.0-alpha.1, selenium-webdriver mistakenly swallows errors in getRect(). We override
+  // the implementation to fix that. TODO: Remove this when fixed in selenium-webdriver.
+  async getRect() {
+    return await (this as any).execute_(
+      new command.Command(command.Name.GET_ELEMENT_RECT));
+  },
+  async rect(this: WebElement): Promise<ClientRect> {
+    return new WebElementRect(await this.getRect());
+  },
+  mouseMove(this: WebElement, params: {x?: number, y?: number} = {}): WebElementPromise {
+    // Unfortunately selenium-webdriver typings at this point (Nov'18) are one major version behind,
+    // and actions are incorrect.
+    const actions = this.getDriver().actions() as any;
+    const p = actions.move({origin: this, ...params}).perform();
+    return new WebElementPromise(this.getDriver(), p.then(() => this));
   },
 });
