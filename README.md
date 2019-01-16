@@ -1,5 +1,7 @@
 # mocha-webdriver
 
+[![npm version](https://badge.fury.io/js/mocha-webdriver.svg)](https://badge.fury.io/js/mocha-webdriver)
+
 > Write Mocha style tests using selenium-webdriver, with many conveniences.
 
 The `mocha-webdriver` package simplifies creating browser tests in JS or TypeScript using
@@ -51,9 +53,13 @@ mocha -b --no-exit test/fooTest.ts
 
 Shorthand to find an element, or a child of an element, by css selector, e.g. `.class-name`.
 
-### driver.findAll(selector)
+### driver.findAll(selector, [mapper])
 
 Shorthand to find all elements matching the given css selector. Also available on a WebElement.
+
+If the `mapper` argument is given, it is a function applied to all the found elements, and
+findAll() returns the results of this function. E.g. `findAll('a', (el) =>
+el.getAttribute('href'))`.
 
 ### driver.findWait(timeoutSec, selector, [message])
 
@@ -62,12 +68,15 @@ WebElement.
 
 ### driver.findContent(selector, contentRegExp)
 
-Find elements matching the given css selector, then return the first one whose getText() matches
+Find elements matching the given css selector, then return the first one whose innerText matches
 the given regular expression. Also available on a WebElement. E.g.
 
 ```typescript
 driver.findContent("button", /Accept/);
 ```
+
+Note that for performance reasons, it only queries the browser once and searches using Javascript
+in browser.
 
 ### elem.doClick(), elem.doSendKeys(...), elem.doClear(), elem.doSubmit()
 
@@ -88,14 +97,25 @@ Shorthand for `elem.getAttribute('value')`.
 
 ### elem.describe()
 
-Returns a human-friendly description of this element. This is particularly useful in the REPL,
-described below.
+Returns a human-friendly description of this element, for example `"button#btn.my-class[some-uuid]"`.
+This is particularly useful in the REPL, described below.
+
+### elem.rect()
+
+Similar to the underlying webdriver's `getRect()`, but returns an object that includes properties
+`{left, right, top, bottom, height, width}`, and whose property `rect` contains the original
+object from webdriver (with `{x, y, height, width}`).
+
+### elem.mouseMove({x?, y?})
+
+Moves the mouse to the given location in pixels relative to this element. This is a chainable
+method. E.g. `await driver.find('#btn').mouseMove({x: 100}).doClick()`.
 
 ## Debugging tests
 
 When you are working on a test, you can be more productive by keeping mocha running. Start it with
 ```
-mocha -b --no-exit test/fooTest.ts
+mocha test/fooTest.ts -b -E
 ```
 
 If a test fails (which you can ensure if needed by adding `assert(false)` somewhere in the test),

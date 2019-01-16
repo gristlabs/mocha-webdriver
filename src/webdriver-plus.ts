@@ -31,7 +31,7 @@ export interface IFindInterface {
   findAll<T>(selector: string, mapper: (e: WebElement) => promise.Promise<T>): Promise<T[]>;
 
   /**
-   * Find elements by a css selector, and filter by getText() matching the given regex.
+   * Find elements by a css selector, and filter by innerText matching the given regex.
    */
   findContent(selector: string, contentRE: RegExp): WebElementPromise;
 }

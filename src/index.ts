@@ -55,7 +55,7 @@ export function useServer(server: IMochaServer) {
 
 // Command-line option for whether to keep browser open if a test fails. This is interpreted by
 // mocha, and we use it too to start up a REPL when this option is used.
-const noexit: boolean = (process.argv.indexOf("--no-exit") !== -1);
+const noexit: boolean = process.argv.includes("--no-exit") || process.argv.includes('-E');
 
 // Start up the webdriver and serve files that its browser will see.
 before(async function() {
