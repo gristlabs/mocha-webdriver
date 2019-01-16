@@ -1,4 +1,4 @@
-import {By, promise, until, WebDriver,
+import {By, error, promise, until, WebDriver,
         WebElement, WebElementCondition, WebElementPromise} from 'selenium-webdriver';
 
 // TODO: This is needed for the getRect() fix (see below).
@@ -180,10 +180,22 @@ Object.assign(WebElement.prototype, {
   },
 
   // As of 4.0.0-alpha.1, selenium-webdriver mistakenly swallows errors in getRect(). We override
-  // the implementation to fix that. TODO: Remove this when fixed in selenium-webdriver.
+  // the implementation to fix that. TODO: Remove this when fixed in selenium-webdriver. The code
+  // below is copy pasted from selenium-webdriver's WebElement.getRect() (NOT WebDriver.getRect),
+  // but adds a `throw err` at end of catch block, which omission is clearly a mistake.
   async getRect() {
-    return await (this as any).execute_(
-      new command.Command(command.Name.GET_ELEMENT_RECT));
+    try {
+      return await (this as any).execute_(new command.Command(command.Name.GET_ELEMENT_RECT));
+    } catch (err) {
+      if (err instanceof error.UnknownCommandError) {
+        const {width, height} =
+            await (this as any).execute_(new command.Command(command.Name.GET_ELEMENT_SIZE));
+        const {x, y} =
+            await (this as any).execute_(new command.Command(command.Name.GET_ELEMENT_LOCATION));
+        return {x, y, width, height};
+      }
+      throw err;
+    }
   },
   async rect(this: WebElement): Promise<ClientRect> {
     return new WebElementRect(await this.getRect());
@@ -191,7 +203,8 @@ Object.assign(WebElement.prototype, {
   mouseMove(this: WebElement, params: {x?: number, y?: number} = {}): WebElementPromise {
     // Unfortunately selenium-webdriver typings at this point (Nov'18) are one major version behind,
     // and actions are incorrect.
-    const actions = this.getDriver().actions() as any;
+    // {bridge: true} allows support for legacy actions, currently needed for Chrome (Jan'19).
+    const actions = (this.getDriver() as any).actions({bridge: true});
     const p = actions.move({origin: this, ...params}).perform();
     return new WebElementPromise(this.getDriver(), p.then(() => this));
   },
