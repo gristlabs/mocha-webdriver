@@ -37,7 +37,7 @@ export interface IFindInterface {
 }
 
 declare module "selenium-webdriver" {
-  // tslint:disable:interface-name no-shadowed-variable no-empty-interface
+  // tslint:disable:interface-name
 
   /**
    * Enhanced WebDriver with shorthand find*() methods.
@@ -112,6 +112,7 @@ class WebElementRect implements ClientRect {
 
 async function findContentHelper(driver: WebDriver, finder: WebElement|null,
                                  selector: string, contentRE: RegExp): Promise<WebElement> {
+  // tslint:disable:no-shadowed-variable
   return await driver.executeScript<WebElement>( () => {
     const finder = (arguments[0] || window.document);
     const elements = [...finder.querySelectorAll(arguments[1])];

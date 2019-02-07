@@ -66,8 +66,7 @@ describe('webdriver-plus', () => {
     it('should support mouse methods', async function() {
       // It's hard to test mouse motion: we do it here by using the mouse to perform text
       // selection, which we can then check with the help of executeScript().
-      const root = await driver.find(".comma");
-      await root.mouseMove();
+      await driver.find(".comma").mouseMove();
       await driver.mouseDown();
       await driver.mouseMoveBy({x: 200});
       await driver.mouseUp();
