@@ -1,4 +1,4 @@
-import {By, error, promise, until, WebDriver,
+import {Button, By, error, promise, until, WebDriver,
         WebElement, WebElementCondition, WebElementPromise} from 'selenium-webdriver';
 
 // TODO: This is needed for the getRect() fix (see below).
@@ -43,7 +43,19 @@ declare module "selenium-webdriver" {
    * Enhanced WebDriver with shorthand find*() methods.
    */
   interface WebDriver extends IFindInterface {
-    // No extra methods beside IFindInterface.
+    // Move mouse by the given amount relative to its current position.
+    // See WebElement.mouseMove() for moving to an element.
+    mouseMoveBy(params?: {x?: number, y?: number}): Promise<void>;
+
+    // Mouse down with a given button, e.g. Button.LEFT
+    mouseDown(button?: number): Promise<void>;
+
+    // Mouse up with a given button, e.g. Button.LEFT
+    mouseUp(button?: number): Promise<void>;
+
+    // Helper to execute actions using new webdriver driver.actions() flow, for which typings are
+    // not currently updated (as of Jan 2019).
+    withActions(cb: (actions: any) => void): Promise<void>;
   }
 
   /**
@@ -126,6 +138,25 @@ Object.assign(WebDriver.prototype, {
   findContent(this: WebDriver, selector: string, contentRE: RegExp): WebElementPromise {
     return new WebElementPromise(this, findContentHelper(this, null, selector, contentRE));
   },
+
+  mouseDown(this: WebDriver, button = Button.LEFT): Promise<void> {
+    return this.withActions((actions: any) => actions.press(button));
+  },
+  mouseUp(this: WebDriver, button = Button.LEFT): Promise<void> {
+    return this.withActions((actions: any) => actions.release(button));
+  },
+  mouseMoveBy(this: WebDriver, params: {x?: number, y?: number} = {}): Promise<void> {
+    return this.withActions((actions: any) => actions.move({origin: 'pointer', ...params}));
+  },
+
+  withActions(this: WebDriver, cb: (actions: any) => void): Promise<void> {
+    // Unfortunately selenium-webdriver typings at this point (Nov'18) are one major version behind,
+    // and actions are incorrect.
+    // {bridge: true} allows support for legacy actions, currently needed for Chrome (Jan'19).
+    const actions = (this as any).actions({bridge: true});
+    cb(actions);
+    return actions.perform();
+  },
 });
 
 // Enhance WebElement to implement IWebElementPlus interface.
@@ -201,11 +232,7 @@ Object.assign(WebElement.prototype, {
     return new WebElementRect(await this.getRect());
   },
   mouseMove(this: WebElement, params: {x?: number, y?: number} = {}): WebElementPromise {
-    // Unfortunately selenium-webdriver typings at this point (Nov'18) are one major version behind,
-    // and actions are incorrect.
-    // {bridge: true} allows support for legacy actions, currently needed for Chrome (Jan'19).
-    const actions = (this.getDriver() as any).actions({bridge: true});
-    const p = actions.move({origin: this, ...params}).perform();
+    const p = this.getDriver().withActions((actions) => actions.move({origin: this, ...params}));
     return new WebElementPromise(this.getDriver(), p.then(() => this));
   },
 });

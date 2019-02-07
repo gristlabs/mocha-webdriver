@@ -8,7 +8,7 @@ describe('webdriver-plus', () => {
     function createDom() {
       document.body.innerHTML = `
         <div id="id1">
-          Hello,
+          Hello<span class="comma">, </span>
           <span class="cls1">World!</span>
           <div class="cls1">
             <button class="cls2">OK</button>
@@ -62,6 +62,18 @@ describe('webdriver-plus', () => {
       await assert.isRejected(root.findContent('.cls1', /B/).getText(), /None.*match/);
       assert.equal(await root.findContent('.cls1', /K$/).getText(), 'OK');
     });
+
+    it('should support mouse methods', async function() {
+      // It's hard to test mouse motion: we do it here by using the mouse to perform text
+      // selection, which we can then check with the help of executeScript().
+      const root = await driver.find(".comma");
+      await root.mouseMove();
+      await driver.mouseDown();
+      await driver.mouseMoveBy({x: 200});
+      await driver.mouseUp();
+      assert.equal(await driver.executeScript(() => window.getSelection().toString().trim()), "World!");
+    });
+
   });
 
   describe('WebElement', function() {
