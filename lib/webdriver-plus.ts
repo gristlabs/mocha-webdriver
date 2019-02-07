@@ -247,6 +247,7 @@ Object.assign(WebElement.prototype, {
   },
   async hasFocus(this: WebElement): Promise<boolean> {
     const active = this.getDriver().switchTo().activeElement();
-    return this.getDriver().executeScript((a: any, b: any) => (a === b), this, active) as Promise<boolean>;
+    const [a, b] = await Promise.all([this.getId(), active.getId()]);
+    return a === b;
   }
 });
