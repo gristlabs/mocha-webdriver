@@ -1,6 +1,6 @@
 import * as path from 'path';
 import {WebElement} from 'selenium-webdriver';
-import {assert, driver} from '../src';
+import {assert, driver} from '../lib';
 
 describe('webdriver-plus', () => {
   describe('find methods', function() {
