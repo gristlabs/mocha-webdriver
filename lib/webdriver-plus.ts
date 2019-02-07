@@ -1,4 +1,4 @@
-import {By, error, promise, until, WebDriver,
+import {Button, By, error, promise, until, WebDriver,
         WebElement, WebElementCondition, WebElementPromise} from 'selenium-webdriver';
 
 // TODO: This is needed for the getRect() fix (see below).
@@ -37,13 +37,28 @@ export interface IFindInterface {
 }
 
 declare module "selenium-webdriver" {
-  // tslint:disable:interface-name no-shadowed-variable no-empty-interface
+  // tslint:disable:interface-name
 
   /**
    * Enhanced WebDriver with shorthand find*() methods.
    */
   interface WebDriver extends IFindInterface {
-    // No extra methods beside IFindInterface.
+    // Mouse down with a given button, e.g. Button.LEFT
+    mouseDown(button?: number): Promise<void>;
+
+    // Mouse up with a given button, e.g. Button.LEFT
+    mouseUp(button?: number): Promise<void>;
+
+    // Move mouse by the given amount relative to its current position.
+    // See WebElement.mouseMove() for moving to an element.
+    mouseMoveBy(params?: {x?: number, y?: number}): Promise<void>;
+
+    // Send keys to the window.
+    sendKeys(...keys: string[]): Promise<void>;
+
+    // Helper to execute actions using new webdriver driver.actions() flow, for which typings are
+    // not currently updated (as of Jan 2019).
+    withActions(cb: (actions: any) => void): Promise<void>;
   }
 
   /**
@@ -70,6 +85,9 @@ declare module "selenium-webdriver" {
     // Shortcut to perform an action moving the mouse to the middle of this element. If x and/or y
     // are given, they are offsets from the element's center.
     mouseMove(params?: {x?: number, y?: number}): WebElementPromise;
+
+    // Returns whether this element is the current activeElement.
+    hasFocus(): Promise<boolean>;
   }
 
   // These are just missing typings.
@@ -94,6 +112,7 @@ class WebElementRect implements ClientRect {
 
 async function findContentHelper(driver: WebDriver, finder: WebElement|null,
                                  selector: string, contentRE: RegExp): Promise<WebElement> {
+  // tslint:disable:no-shadowed-variable
   return await driver.executeScript<WebElement>( () => {
     const finder = (arguments[0] || window.document);
     const elements = [...finder.querySelectorAll(arguments[1])];
@@ -125,6 +144,28 @@ Object.assign(WebDriver.prototype, {
 
   findContent(this: WebDriver, selector: string, contentRE: RegExp): WebElementPromise {
     return new WebElementPromise(this, findContentHelper(this, null, selector, contentRE));
+  },
+
+  mouseDown(this: WebDriver, button = Button.LEFT): Promise<void> {
+    return this.withActions((actions: any) => actions.press(button));
+  },
+  mouseUp(this: WebDriver, button = Button.LEFT): Promise<void> {
+    return this.withActions((actions: any) => actions.release(button));
+  },
+  mouseMoveBy(this: WebDriver, params: {x?: number, y?: number} = {}): Promise<void> {
+    return this.withActions((actions: any) => actions.move({origin: 'pointer', ...params}));
+  },
+  sendKeys(this: WebDriver, ...keys: string[]): Promise<void> {
+    return this.withActions((actions: any) => actions.sendKeys(...keys));
+  },
+
+  withActions(this: WebDriver, cb: (actions: any) => void): Promise<void> {
+    // Unfortunately selenium-webdriver typings at this point (Nov'18) are one major version behind,
+    // and actions are incorrect.
+    // {bridge: true} allows support for legacy actions, currently needed for Chrome (Jan'19).
+    const actions = (this as any).actions({bridge: true});
+    cb(actions);
+    return actions.perform();
   },
 });
 
@@ -201,11 +242,12 @@ Object.assign(WebElement.prototype, {
     return new WebElementRect(await this.getRect());
   },
   mouseMove(this: WebElement, params: {x?: number, y?: number} = {}): WebElementPromise {
-    // Unfortunately selenium-webdriver typings at this point (Nov'18) are one major version behind,
-    // and actions are incorrect.
-    // {bridge: true} allows support for legacy actions, currently needed for Chrome (Jan'19).
-    const actions = (this.getDriver() as any).actions({bridge: true});
-    const p = actions.move({origin: this, ...params}).perform();
+    const p = this.getDriver().withActions((actions) => actions.move({origin: this, ...params}));
     return new WebElementPromise(this.getDriver(), p.then(() => this));
   },
+  async hasFocus(this: WebElement): Promise<boolean> {
+    const active = this.getDriver().switchTo().activeElement();
+    const [a, b] = await Promise.all([this.getId(), active.getId()]);
+    return a === b;
+  }
 });

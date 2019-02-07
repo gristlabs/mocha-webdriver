@@ -1,13 +1,14 @@
+import {get as getColor} from 'color-string';
 import * as path from 'path';
-import {WebElement} from 'selenium-webdriver';
-import {assert, driver} from '../src';
+import {Key, WebElement} from 'selenium-webdriver';
+import {assert, driver} from '../lib';
 
 describe('webdriver-plus', () => {
   describe('find methods', function() {
     function createDom() {
       document.body.innerHTML = `
         <div id="id1">
-          Hello,
+          Hello<span class="comma">, </span>
           <span class="cls1">World!</span>
           <div class="cls1">
             <button class="cls2">OK</button>
@@ -60,6 +61,16 @@ describe('webdriver-plus', () => {
       const root = await driver.find("#id1");
       await assert.isRejected(root.findContent('.cls1', /B/).getText(), /None.*match/);
       assert.equal(await root.findContent('.cls1', /K$/).getText(), 'OK');
+    });
+
+    it('should support mouse methods', async function() {
+      // It's hard to test mouse motion: we do it here by using the mouse to perform text
+      // selection, which we can then check with the help of executeScript().
+      await driver.find(".comma").mouseMove();
+      await driver.mouseDown();
+      await driver.mouseMoveBy({x: 200});
+      await driver.mouseUp();
+      assert.equal(await driver.executeScript(() => window.getSelection().toString().trim()), "World!");
     });
   });
 
@@ -117,11 +128,20 @@ describe('webdriver-plus', () => {
     });
 
     it('should move mouse to an element using mouseMove() method', async function() {
-      assert.equal(await driver.find('#btn').getCssValue('color'), 'rgb(0, 0, 0)');
+      assert.deepEqual(getColor(await driver.find('#btn').getCssValue('color')), getColor('black'));
       await driver.find('#btn').mouseMove();
-      assert.equal(await driver.find('#btn').getCssValue('color'), 'rgb(0, 128, 0)');
+      assert.deepEqual(getColor(await driver.find('#btn').getCssValue('color')), getColor('green'));
       await driver.find('#btn').mouseMove({x: 100});
-      assert.equal(await driver.find('#btn').getCssValue('color'), 'rgb(0, 0, 0)');
+      assert.deepEqual(getColor(await driver.find('#btn').getCssValue('color')), getColor('black'));
+    });
+
+    it('should support hasFocus', async function() {
+      await driver.find('#inp').click();
+      assert.equal(await driver.find('#inp').hasFocus(), true);
+      assert.equal(await driver.find('#btn').hasFocus(), false);
+      await driver.sendKeys(Key.TAB);
+      assert.equal(await driver.find('#inp').hasFocus(), false);
+      assert.equal(await driver.find('#btn').hasFocus(), true);
     });
   });
 });

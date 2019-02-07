@@ -40,7 +40,7 @@ Running the test:
 mocha test/fooTest.ts
 
 # To debug a failing test
-mocha -b --no-exit test/fooTest.ts
+mocha test/fooTest.ts -b --no-exit
 ```
 
 (If mocha is locally installed, run `./node_modules/.bin/mocha` or `$(npm bin)/mocha`).
@@ -49,11 +49,11 @@ mocha -b --no-exit test/fooTest.ts
 
 `mocha-webdriver` provides several enhancement to the webdriver interface:
 
-### driver.find(selector), element.find(selector)
+### driverOrElement.find(selector)
 
 Shorthand to find an element, or a child of an element, by css selector, e.g. `.class-name`.
 
-### driver.findAll(selector, [mapper])
+### driverOrElement.findAll(selector, [mapper])
 
 Shorthand to find all elements matching the given css selector. Also available on a WebElement.
 
@@ -61,12 +61,12 @@ If the `mapper` argument is given, it is a function applied to all the found ele
 findAll() returns the results of this function. E.g. `findAll('a', (el) =>
 el.getAttribute('href'))`.
 
-### driver.findWait(timeoutSec, selector, [message])
+### driverOrElement.findWait(timeoutSec, selector, [message])
 
 Shorthand to wait for an element matching the given selector to be present. Also available on a
 WebElement.
 
-### driver.findContent(selector, contentRegExp)
+### driverOrElement.findContent(selector, contentRegExp)
 
 Find elements matching the given css selector, then return the first one whose innerText matches
 the given regular expression. Also available on a WebElement. E.g.
@@ -110,6 +110,23 @@ object from webdriver (with `{x, y, height, width}`).
 
 Moves the mouse to the given location in pixels relative to this element. This is a chainable
 method. E.g. `await driver.find('#btn').mouseMove({x: 100}).doClick()`.
+
+### elem.hasFocus()
+
+Returns whether this element is the current activeElement.
+
+### driver.mouseDown(button?), driver.mouseUp(button?)
+
+Performs "mouseDown" or "mouseUp" action with the given button, Button.LEFT by default.
+
+### driver.mouseMoveBy({x?, y?})
+
+Moves the mouse by the given offset relative to its current position.
+
+### driver.sendKeys(...keys)
+
+Send keys to the window.
+
 
 ## Debugging tests
 
