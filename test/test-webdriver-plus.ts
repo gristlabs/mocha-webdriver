@@ -1,3 +1,4 @@
+import {get as getColor} from 'color-string';
 import * as path from 'path';
 import {WebElement} from 'selenium-webdriver';
 import {assert, driver} from '../lib';
@@ -117,11 +118,11 @@ describe('webdriver-plus', () => {
     });
 
     it('should move mouse to an element using mouseMove() method', async function() {
-      assert.equal(await driver.find('#btn').getCssValue('color'), 'rgb(0, 0, 0)');
+      assert.deepEqual(getColor(await driver.find('#btn').getCssValue('color')), getColor('black'));
       await driver.find('#btn').mouseMove();
-      assert.equal(await driver.find('#btn').getCssValue('color'), 'rgb(0, 128, 0)');
+      assert.deepEqual(getColor(await driver.find('#btn').getCssValue('color')), getColor('green'));
       await driver.find('#btn').mouseMove({x: 100});
-      assert.equal(await driver.find('#btn').getCssValue('color'), 'rgb(0, 0, 0)');
+      assert.deepEqual(getColor(await driver.find('#btn').getCssValue('color')), getColor('black'));
     });
   });
 });
