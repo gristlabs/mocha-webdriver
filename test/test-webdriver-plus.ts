@@ -1,6 +1,6 @@
 import {get as getColor} from 'color-string';
 import * as path from 'path';
-import {WebElement} from 'selenium-webdriver';
+import {Key, WebElement} from 'selenium-webdriver';
 import {assert, driver} from '../lib';
 
 describe('webdriver-plus', () => {
@@ -73,7 +73,6 @@ describe('webdriver-plus', () => {
       await driver.mouseUp();
       assert.equal(await driver.executeScript(() => window.getSelection().toString().trim()), "World!");
     });
-
   });
 
   describe('WebElement', function() {
@@ -135,6 +134,15 @@ describe('webdriver-plus', () => {
       assert.deepEqual(getColor(await driver.find('#btn').getCssValue('color')), getColor('green'));
       await driver.find('#btn').mouseMove({x: 100});
       assert.deepEqual(getColor(await driver.find('#btn').getCssValue('color')), getColor('black'));
+    });
+
+    it('should support hasFocus', async function() {
+      await driver.find('#inp').click();
+      assert.equal(await driver.find('#inp').hasFocus(), true);
+      assert.equal(await driver.find('#btn').hasFocus(), false);
+      await driver.sendKeys(Key.TAB);
+      assert.equal(await driver.find('#inp').hasFocus(), false);
+      assert.equal(await driver.find('#btn').hasFocus(), true);
     });
   });
 });

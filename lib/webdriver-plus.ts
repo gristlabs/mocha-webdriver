@@ -43,15 +43,18 @@ declare module "selenium-webdriver" {
    * Enhanced WebDriver with shorthand find*() methods.
    */
   interface WebDriver extends IFindInterface {
-    // Move mouse by the given amount relative to its current position.
-    // See WebElement.mouseMove() for moving to an element.
-    mouseMoveBy(params?: {x?: number, y?: number}): Promise<void>;
-
     // Mouse down with a given button, e.g. Button.LEFT
     mouseDown(button?: number): Promise<void>;
 
     // Mouse up with a given button, e.g. Button.LEFT
     mouseUp(button?: number): Promise<void>;
+
+    // Move mouse by the given amount relative to its current position.
+    // See WebElement.mouseMove() for moving to an element.
+    mouseMoveBy(params?: {x?: number, y?: number}): Promise<void>;
+
+    // Send keys to the window.
+    sendKeys(...keys: string[]): Promise<void>;
 
     // Helper to execute actions using new webdriver driver.actions() flow, for which typings are
     // not currently updated (as of Jan 2019).
@@ -82,6 +85,9 @@ declare module "selenium-webdriver" {
     // Shortcut to perform an action moving the mouse to the middle of this element. If x and/or y
     // are given, they are offsets from the element's center.
     mouseMove(params?: {x?: number, y?: number}): WebElementPromise;
+
+    // Returns whether this element is the current activeElement.
+    hasFocus(): Promise<boolean>;
   }
 
   // These are just missing typings.
@@ -147,6 +153,9 @@ Object.assign(WebDriver.prototype, {
   },
   mouseMoveBy(this: WebDriver, params: {x?: number, y?: number} = {}): Promise<void> {
     return this.withActions((actions: any) => actions.move({origin: 'pointer', ...params}));
+  },
+  sendKeys(this: WebDriver, ...keys: string[]): Promise<void> {
+    return this.withActions((actions: any) => actions.sendKeys(...keys));
   },
 
   withActions(this: WebDriver, cb: (actions: any) => void): Promise<void> {
@@ -235,4 +244,8 @@ Object.assign(WebElement.prototype, {
     const p = this.getDriver().withActions((actions) => actions.move({origin: this, ...params}));
     return new WebElementPromise(this.getDriver(), p.then(() => this));
   },
+  async hasFocus(this: WebElement): Promise<boolean> {
+    const active = this.getDriver().switchTo().activeElement();
+    return this.getDriver().executeScript((a: any, b: any) => (a === b), this, active) as Promise<boolean>;
+  }
 });
