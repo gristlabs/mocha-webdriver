@@ -80,7 +80,7 @@ declare module "selenium-webdriver" {
     getRect(): Promise<{width: number, height: number, x: number, y: number}>;
 
     // Returns a ClientRect describing this element's location and size.
-    rect(): ClientRect;
+    rect(): Promise<ClientRect>;
 
     // Shortcut to perform an action moving the mouse to the middle of this element. If x and/or y
     // are given, they are offsets from the element's center.
