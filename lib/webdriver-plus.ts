@@ -88,6 +88,9 @@ declare module "selenium-webdriver" {
 
     // Returns whether this element is the current activeElement.
     hasFocus(): Promise<boolean>;
+
+    // Returns whether this element is present.
+    isPresent(): Promise<boolean>;
   }
 
   // These are just missing typings.
@@ -113,14 +116,21 @@ class WebElementRect implements ClientRect {
 async function findContentHelper(driver: WebDriver, finder: WebElement|null,
                                  selector: string, contentRE: RegExp): Promise<WebElement> {
   // tslint:disable:no-shadowed-variable
-  return await driver.executeScript<WebElement>( () => {
-    const finder = (arguments[0] || window.document);
-    const elements = [...finder.querySelectorAll(arguments[1])];
-    const contentRE = new RegExp(arguments[2]);
-    const found = elements.find((el) => contentRE.test(el.innerText));
-    if (!found) { throw new Error(`None of ${elements.length} elements match ${contentRE}`); }
-    return found;
-  }, finder, selector, contentRE.source);
+  try {
+    return await driver.executeScript<WebElement>( () => {
+      const finder = (arguments[0] || window.document);
+      const elements = [...finder.querySelectorAll(arguments[1])];
+      const contentRE = new RegExp(arguments[2]);
+      const found = elements.find((el) => contentRE.test(el.innerText));
+      if (!found) { throw new Error(`None of ${elements.length} elements match ${contentRE}`); }
+      return found;
+    }, finder, selector, contentRE.source);
+  } catch (err) {
+    if (/None of .* elements match/.test(err)) {
+      throw new error.NoSuchElementError(err.message);
+    }
+    throw err;
+  }
 }
 
 // Enhance WebDriver to implement IWebDriverPlus interface.
@@ -249,5 +259,14 @@ Object.assign(WebElement.prototype, {
     const active = this.getDriver().switchTo().activeElement();
     const [a, b] = await Promise.all([this.getId(), active.getId()]);
     return a === b;
-  }
+  },
+  async isPresent(this: WebElement): Promise<boolean> {
+    try {
+      await this.getId();
+      return true;
+    } catch (e) {
+      if (e.name === 'NoSuchElementError') { return false; }
+      throw e;
+    }
+  },
 });
