@@ -143,5 +143,13 @@ describe('webdriver-plus', () => {
       assert.equal(await driver.find('#inp').hasFocus(), false);
       assert.equal(await driver.find('#btn').hasFocus(), true);
     });
+
+    it('should support isPresent', async function() {
+      assert.equal(await driver.find('#btn').isPresent(), true);
+      assert.equal(await driver.find('#non-existent').isPresent(), false);
+      assert.equal(await driver.find('#btn').find('.zzzz').isPresent(), false);
+      assert.equal(await driver.findContent('#btn', /Hello/).isPresent(), true);
+      assert.equal(await driver.findContent('#btn', /Bonjour/).isPresent(), false);
+    });
   });
 });
