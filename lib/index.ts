@@ -68,11 +68,25 @@ before(async function() {
   // Prepend node_modules/.bin to PATH, for chromedriver/geckodriver to be found.
   process.env.PATH = path.resolve("node_modules", ".bin") + ":" + process.env.PATH;
 
+  const chromeOpts = new chrome.Options();
+  const firefoxOpts = new firefox.Options();
+
+  // Pay attention to the environment variables (documented in README).
+  if (process.env.MOCHA_WEBDRIVER_HEADLESS) {
+    chromeOpts.headless();
+    firefoxOpts.headless();
+  }
+  if (process.env.MOCHA_WEBDRIVER_ARGS) {
+    const args = process.env.MOCHA_WEBDRIVER_ARGS.trim().split(/\s+/);
+    chromeOpts.addArguments(...args);
+    firefoxOpts.addArguments(...args);
+  }
+
   driver = new Builder()
     .forBrowser('firefox')
     .setLoggingPrefs(logPrefs)
-    .setChromeOptions(new chrome.Options())
-    .setFirefoxOptions(new firefox.Options())
+    .setChromeOptions(chromeOpts)
+    .setFirefoxOptions(firefoxOpts)
     .build();
 });
 

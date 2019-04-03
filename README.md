@@ -45,6 +45,13 @@ mocha test/fooTest.ts -b --no-exit
 
 (If mocha is locally installed, run `./node_modules/.bin/mocha` or `$(npm bin)/mocha`).
 
+You may select the browser to start `SELENIUM_BROWSER=chrome|firefox` environment variable (see [selenium
+docs](https://seleniumhq.github.io/selenium/docs/api/javascript/module/selenium-webdriver/index_exports_Builder.html)
+for other variables). Some additional environment variables are also supported:
+
+  - `MOCHA_WEBDRIVER_HEADLESS`: start browser in headless mode if set to non-empty value
+  - `MOCHA_WEBDRIVER_ARGS`: pass the given args to the browser (e.g. `--disable-gpu --foo=bar`)
+
 ## Useful methods
 
 `mocha-webdriver` provides several enhancement to the webdriver interface:
