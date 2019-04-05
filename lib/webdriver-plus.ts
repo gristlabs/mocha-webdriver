@@ -34,6 +34,11 @@ export interface IFindInterface {
    * Find elements by a css selector, and filter by innerText matching the given regex.
    */
   findContent(selector: string, contentRE: RegExp): WebElementPromise;
+
+  /**
+   * Shorthand to wait for an element containing specific innerText matching the given regex to be present.
+   */
+  findContentWait(timeoutSec: number, selector: string, contentRE: RegExp, message?: string): WebElementPromise;
 }
 
 declare module "selenium-webdriver" {
@@ -65,6 +70,9 @@ declare module "selenium-webdriver" {
    * Enhanced WebElement, with shorthand find*() methods, and chainable do*() methods.
    */
   interface WebElement extends IFindInterface {
+    // Returns the closest ancestor of this element that matches the css selector.
+    findClosest(selector: string): WebElementPromise;
+
     doClick(): WebElementPromise;
     doSendKeys(...args: string[]): WebElementPromise;
     doSubmit(): WebElementPromise;
@@ -113,24 +121,46 @@ class WebElementRect implements ClientRect {
   get right(): number { return this.rect.x + this.rect.width; }
 }
 
-async function findContentHelper(driver: WebDriver, finder: WebElement|null,
-                                 selector: string, contentRE: RegExp): Promise<WebElement> {
+async function findContentHelper(driver: WebDriver, finder: WebElement|null, selector: string,
+                                 contentRE: RegExp, throwErrOnMiss: boolean = true): Promise<WebElement> {
   // tslint:disable:no-shadowed-variable
   try {
-    return await driver.executeScript<WebElement>( () => {
+    return await driver.executeScript<WebElement>(() => {
       const finder = (arguments[0] || window.document);
       const elements = [...finder.querySelectorAll(arguments[1])];
       const contentRE = new RegExp(arguments[2]);
+      const throwErrOnMiss = arguments[3];
       const found = elements.find((el) => contentRE.test(el.innerText));
-      if (!found) { throw new Error(`None of ${elements.length} elements match ${contentRE}`); }
+      if (!found && throwErrOnMiss) { throw new Error(`None of ${elements.length} elements match ${contentRE}`); }
       return found;
-    }, finder, selector, contentRE.source);
+    }, finder, selector, contentRE.source, throwErrOnMiss);
   } catch (err) {
-    if (/None of .* elements match/.test(err)) {
-      throw new error.NoSuchElementError(err.message);
-    }
-    throw err;
+    return rethrowErrorAsSpecial(err);
   }
+}
+
+async function findClosestHelper(driver: WebDriver, finder: WebElement, selector: string): Promise<WebElement> {
+  // tslint:disable:no-shadowed-variable
+  try {
+    return await driver.executeScript<WebElement>(() => {
+      const finder = arguments[0];
+      const selector = arguments[1];
+      const elem = finder.closest(selector);
+      if (!elem) { throw new Error(`None of the ancestor elements match ${selector}`); }
+      return elem;
+    }, finder, selector);
+  } catch (err) {
+    return rethrowErrorAsSpecial(err);
+  }
+}
+
+// Rethrows an error as a NoSuchElementError if the message indicates that the error should be of
+// that type. Otherwise, rethrows the error without modifying it.
+function rethrowErrorAsSpecial(err: Error): any {
+  if (/None of .* elements match/.test(err.message)) {
+    throw new error.NoSuchElementError(err.message);
+  }
+  throw err;
 }
 
 // Enhance WebDriver to implement IWebDriverPlus interface.
@@ -154,6 +184,18 @@ Object.assign(WebDriver.prototype, {
 
   findContent(this: WebDriver, selector: string, contentRE: RegExp): WebElementPromise {
     return new WebElementPromise(this, findContentHelper(this, null, selector, contentRE));
+  },
+
+  findContentWait(
+    this: WebDriver,
+    timeoutSec: number,
+    selector: string,
+    contentRE: RegExp,
+    message?: string
+  ): WebElementPromise {
+    const condition = new WebElementCondition(`for element matching ${selector} and ${contentRE}`,
+      () => findContentHelper(this, null, selector, contentRE, false));
+    return this.wait(condition, timeoutSec * 1000, message);
   },
 
   mouseDown(this: WebDriver, button = Button.LEFT): Promise<void> {
@@ -202,6 +244,22 @@ Object.assign(WebElement.prototype, {
 
   findContent(this: WebElement, selector: string, contentRE: RegExp): WebElementPromise {
     return new WebElementPromise(this.getDriver(), findContentHelper(this.getDriver(), this, selector, contentRE));
+  },
+
+  findContentWait(
+    this: WebElement,
+    timeoutSec: number,
+    selector: string,
+    contentRE: RegExp,
+    message?: string
+  ): WebElementPromise {
+    const condition = new WebElementCondition(`for element matching ${selector} and ${contentRE}`,
+      () => findContentHelper(this.getDriver(), this, selector, contentRE, false));
+    return this.getDriver().wait(condition, timeoutSec * 1000, message);
+  },
+
+  findClosest(this: WebElement, selector: string): WebElementPromise {
+    return new WebElementPromise(this.getDriver(), findClosestHelper(this.getDriver(), this, selector));
   },
 
   doClick(this: WebElement): WebElementPromise {
