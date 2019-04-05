@@ -88,6 +88,8 @@ before(async function() {
     .setChromeOptions(chromeOpts)
     .setFirefoxOptions(firefoxOpts)
     .build();
+  // If driver fails to start, this will let us notice and abort quickly.
+  await driver.getSession();
 });
 
 // Quit the webdriver and stop serving files, unless we failed and --no-exit is given.
