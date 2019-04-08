@@ -32,9 +32,14 @@ export let driver: WebDriver;
  * Use useServer() from a test suite to start an implementation of IMochaServer with the test.
  */
 export interface IMochaServer {
-  start(): Promise<void>;
-  stop(): Promise<void>;
+  start(context: IMochaContext): Promise<void>;
+  stop(context: IMochaContext): Promise<void>;
   getHost(): string;
+}
+
+export interface IMochaContext {
+  // Set timeout for the current test or hook.
+  timeout(ms: number): void;
 }
 
 const _servers: Set<IMochaServer> = new Set();
@@ -44,10 +49,10 @@ const _servers: Set<IMochaServer> = new Set();
  * same server is used by multiple tests, the server is reused.
  */
 export function useServer(server: IMochaServer) {
-  before(async () => {
+  before(async function() {
     if (!_servers.has(server)) {
       _servers.add(server);
-      await server.start();
+      await server.start(this);
     }
   });
   // Stopping of the started-up servers happens in cleanup().
@@ -106,15 +111,15 @@ after(async function() {
     // tslint:disable-next-line:no-floating-promises
     startRepl(Array.from(files));
   } else {
-    await cleanup();
+    await cleanup(this);
   }
 });
 
-async function cleanup() {
+async function cleanup(context: IMochaContext) {
   if (driver) { await driver.quit(); }
 
   // Stop all servers registered with useServer().
-  await Promise.all(Array.from(_servers, (server) => server.stop()));
+  await Promise.all(Array.from(_servers, (server) => server.stop(context)));
 }
 
 async function startRepl(files: string[]) {
@@ -138,7 +143,8 @@ async function startRepl(files: string[]) {
     driver,
     rerun: rerun.bind(null, files),
   });
-  replObj.on('exit', cleanup);
+  // This cleanup is called outside a mocha hook, so `timeout(ms)` does nothing.
+  replObj.on('exit', () => cleanup({timeout: () => undefined}));
 }
 
 // Global REPL function that reruns the i-th failed test suite.
