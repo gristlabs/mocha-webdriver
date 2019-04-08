@@ -131,7 +131,7 @@ async function findContentHelper(driver: WebDriver, finder: WebElement|null,
 }
 
 async function findContentIfPresent(driver: WebDriver, finder: WebElement|null,
-                                    selector: string, contentRE: RegExp): Promise<WebElement> {
+                                    selector: string, contentRE: RegExp): Promise<WebElement|null> {
   // tslint:disable:no-shadowed-variable
   return await driver.executeScript<WebElement>(() => {
     const finder = (arguments[0] || window.document);

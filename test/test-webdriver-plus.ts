@@ -34,7 +34,7 @@ describe('webdriver-plus', () => {
     async function addDomDelayed(waitMs: number, id: string, parentId?: string) {
       await new Promise((r) => setTimeout(r, waitMs));
       assert.equal(await driver.find(`#${id}`).isPresent(), false);
-      driver.executeScript(addDom, id, parentId);
+      return driver.executeScript(addDom, id, parentId);
     }
 
     before(async function() {
@@ -69,18 +69,18 @@ describe('webdriver-plus', () => {
     });
 
     it('should wait for match with driver.findWait()', async function() {
-      // Add component after 10ms.
-      addDomDelayed(10, 'waitForIt');
-      // Wait for component being added.
-      assert.equal(await driver.findWait(1, '#waitForIt').getText(), 'Foo');
+      // Start waiting for the component being added, then add it after 10ms.
+      const addAsync = addDomDelayed(10, 'waitForIt');
+      const [elemText] = await Promise.all([driver.findWait(1, '#waitForIt').getText(), addAsync]);
+      assert.equal(elemText, 'Foo');
     });
 
     it('should wait for child match with element.findWait()', async function() {
-      // Add component after 10ms.
-      addDomDelayed(10, 'elemWaitForIt', 'id1');
-      // Wait for component being added.
       const root = await driver.find('#id1');
-      assert.equal(await root.findWait(1, '#elemWaitForIt').getText(), 'Foo');
+      // Start waiting for the component being added, then add it after 10ms.
+      const addAsync = addDomDelayed(10, 'elemWaitForIt', 'id1');
+      const [elemText] = await Promise.all([root.findWait(1, '#elemWaitForIt').getText(), addAsync]);
+      assert.equal(elemText, 'Foo');
     });
 
     it('should find matching content with driver.findContent()', async function() {
@@ -96,18 +96,20 @@ describe('webdriver-plus', () => {
     });
 
     it('should wait for matching content with driver.findContentWait()', async function() {
-      // Add component after 10ms.
-      addDomDelayed(10, 'waitForContent');
-      // Wait for component being added.
-      assert.equal(await driver.findContentWait(1, '#waitForContent', /Foo/).getText(), 'Foo');
+      // Start waiting for the component being added, then add it after 10ms.
+      const addAsync = addDomDelayed(10, 'waitForContent');
+      const waitAsync = driver.findContentWait(1, '#waitForContent', /Foo/).getText();
+      const [elemText] = await Promise.all([waitAsync, addAsync]);
+      assert.equal(elemText, 'Foo');
     });
 
     it('should wait for child content match with element.findContentWait()', async function() {
-      // Add component after 10ms.
-      addDomDelayed(10, 'elemWaitForContent', 'id1');
-      // Wait for component being added.
       const root = await driver.find('#id1');
-      assert.equal(await root.findContentWait(1, '#elemWaitForContent', /Foo/).getText(), 'Foo');
+      // Start waiting for the component being added, then add it after 10ms.
+      const addAsync = addDomDelayed(10, 'elemWaitForContent', 'id1');
+      const waitAsync = root.findContentWait(1, '#elemWaitForContent', /Foo/).getText();
+      const [elemText] = await Promise.all([waitAsync, addAsync]);
+      assert.equal(elemText, 'Foo');
     });
 
     it('should find the closest matching ancestor with element.findClosest()', async function() {
