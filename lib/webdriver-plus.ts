@@ -121,46 +121,37 @@ class WebElementRect implements ClientRect {
   get right(): number { return this.rect.x + this.rect.width; }
 }
 
-async function findContentHelper(driver: WebDriver, finder: WebElement|null, selector: string,
-                                 contentRE: RegExp, throwErrOnMiss: boolean = true): Promise<WebElement> {
-  // tslint:disable:no-shadowed-variable
-  try {
-    return await driver.executeScript<WebElement>(() => {
-      const finder = (arguments[0] || window.document);
-      const elements = [...finder.querySelectorAll(arguments[1])];
-      const contentRE = new RegExp(arguments[2]);
-      const throwErrOnMiss = arguments[3];
-      const found = elements.find((el) => contentRE.test(el.innerText));
-      if (!found && throwErrOnMiss) { throw new Error(`None of ${elements.length} elements match ${contentRE}`); }
-      return found;
-    }, finder, selector, contentRE.source, throwErrOnMiss);
-  } catch (err) {
-    return rethrowErrorAsSpecial(err);
+async function findContentHelper(driver: WebDriver, finder: WebElement|null,
+                                 selector: string, contentRE: RegExp): Promise<WebElement> {
+  const elem = await findContentIfPresent(driver, finder, selector, contentRE);
+  if (!elem) {
+    throw new error.NoSuchElementError(`No elements match ${selector} and ${contentRE}`);
   }
+  return elem;
+}
+
+async function findContentIfPresent(driver: WebDriver, finder: WebElement|null,
+                                    selector: string, contentRE: RegExp): Promise<WebElement> {
+  // tslint:disable:no-shadowed-variable
+  return await driver.executeScript<WebElement>(() => {
+    const finder = (arguments[0] || window.document);
+    const elements = [...finder.querySelectorAll(arguments[1])];
+    const contentRE = new RegExp(arguments[2]);
+    return elements.find((el) => contentRE.test(el.innerText));
+  }, finder, selector, contentRE.source);
 }
 
 async function findClosestHelper(driver: WebDriver, finder: WebElement, selector: string): Promise<WebElement> {
   // tslint:disable:no-shadowed-variable
-  try {
-    return await driver.executeScript<WebElement>(() => {
-      const finder = arguments[0];
-      const selector = arguments[1];
-      const elem = finder.closest(selector);
-      if (!elem) { throw new Error(`None of the ancestor elements match ${selector}`); }
-      return elem;
-    }, finder, selector);
-  } catch (err) {
-    return rethrowErrorAsSpecial(err);
+  const elem = await driver.executeScript<WebElement|null>(() => {
+    const finder = arguments[0];
+    const selector = arguments[1];
+    return finder.closest(selector);
+  }, finder, selector);
+  if (!elem) {
+    throw new error.NoSuchElementError(`No ancestor elements match ${selector}`);
   }
-}
-
-// Rethrows an error as a NoSuchElementError if the message indicates that the error should be of
-// that type. Otherwise, rethrows the error without modifying it.
-function rethrowErrorAsSpecial(err: Error): any {
-  if (/None of .* elements match/.test(err.message)) {
-    throw new error.NoSuchElementError(err.message);
-  }
-  throw err;
+  return elem;
 }
 
 // Enhance WebDriver to implement IWebDriverPlus interface.
@@ -194,7 +185,7 @@ Object.assign(WebDriver.prototype, {
     message?: string
   ): WebElementPromise {
     const condition = new WebElementCondition(`for element matching ${selector} and ${contentRE}`,
-      () => findContentHelper(this, null, selector, contentRE, false));
+      () => findContentIfPresent(this, null, selector, contentRE));
     return this.wait(condition, timeoutSec * 1000, message);
   },
 
@@ -254,7 +245,7 @@ Object.assign(WebElement.prototype, {
     message?: string
   ): WebElementPromise {
     const condition = new WebElementCondition(`for element matching ${selector} and ${contentRE}`,
-      () => findContentHelper(this.getDriver(), this, selector, contentRE, false));
+      () => findContentIfPresent(this.getDriver(), this, selector, contentRE));
     return this.getDriver().wait(condition, timeoutSec * 1000, message);
   },
 

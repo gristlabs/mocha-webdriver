@@ -30,6 +30,13 @@ describe('webdriver-plus', () => {
       }
     }
 
+    // Calls addDom with a delay, ensuring that the element is not present before it is added.
+    async function addDomDelayed(waitMs: number, id: string, parentId?: string) {
+      await new Promise((r) => setTimeout(r, waitMs));
+      assert.equal(await driver.find(`#${id}`).isPresent(), false);
+      driver.executeScript(addDom, id, parentId);
+    }
+
     before(async function() {
       this.timeout(20000);
       await driver.get('file://' + path.resolve(__dirname, 'blank.html'));
@@ -62,51 +69,52 @@ describe('webdriver-plus', () => {
     });
 
     it('should wait for match with driver.findWait()', async function() {
-      // Add component after 500ms.
-      setTimeout(() => driver.executeScript(addDom, 'waitForIt'), 500);
+      // Add component after 10ms.
+      addDomDelayed(10, 'waitForIt');
       // Wait for component being added.
       assert.equal(await driver.findWait(1, '#waitForIt').getText(), 'Foo');
     });
 
     it('should wait for child match with element.findWait()', async function() {
-      // Add component after 500ms.
-      setTimeout(() => driver.executeScript(addDom, 'elemWaitForIt', 'id1'), 500);
-      const root = await driver.find('#id1');
+      // Add component after 10ms.
+      addDomDelayed(10, 'elemWaitForIt', 'id1');
       // Wait for component being added.
+      const root = await driver.find('#id1');
       assert.equal(await root.findWait(1, '#elemWaitForIt').getText(), 'Foo');
     });
 
     it('should find matching content with driver.findContent()', async function() {
       assert.equal(await driver.findContent('.cls1', /B/).getText(), 'Bye');
       assert.equal(await driver.findContent('.cls1', /K$/).getText(), 'OK');
-      await assert.isRejected(driver.findContent('.cls1', /^K/).getText(), /None.*match/);
+      await assert.isRejected(driver.findContent('.cls1', /^K/).getText(), /No elements match/);
     });
 
     it('should find matching content among children with element.findContent()', async function() {
       const root = await driver.find("#id1");
-      await assert.isRejected(root.findContent('.cls1', /B/).getText(), /None.*match/);
+      await assert.isRejected(root.findContent('.cls1', /B/).getText(), /No elements match/);
       assert.equal(await root.findContent('.cls1', /K$/).getText(), 'OK');
     });
 
     it('should wait for matching content with driver.findContentWait()', async function() {
-      // Add component after 500ms.
-      setTimeout(() => driver.executeScript(addDom, 'waitForContent'), 500);
+      // Add component after 10ms.
+      addDomDelayed(10, 'waitForContent');
       // Wait for component being added.
       assert.equal(await driver.findContentWait(1, '#waitForContent', /Foo/).getText(), 'Foo');
     });
 
     it('should wait for child content match with element.findContentWait()', async function() {
-      // Add component after 500ms.
-      setTimeout(() => driver.executeScript(addDom, 'elemWaitForContent', 'id1'), 500);
-      const root = await driver.find('#id1');
+      // Add component after 10ms.
+      addDomDelayed(10, 'elemWaitForContent', 'id1');
       // Wait for component being added.
+      const root = await driver.find('#id1');
       assert.equal(await root.findContentWait(1, '#elemWaitForContent', /Foo/).getText(), 'Foo');
     });
 
     it('should find the closest matching ancestor with element.findClosest()', async function() {
       const child = await driver.find(".cls2");
       await assert.match(await child.findClosest('#id1').getText(), /Hello/);
-      await assert.isRejected(child.findClosest('#id2'), /None.*match/);
+      await assert.isRejected(child.findClosest('#id2'), /No ancestor elements match/);
+      await assert.equal(await child.findClosest('#id2').isPresent(), false);
     });
 
     it('should support mouse methods', async function() {
