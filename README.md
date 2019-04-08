@@ -85,6 +85,15 @@ driver.findContent("button", /Accept/);
 Note that for performance reasons, it only queries the browser once and searches using Javascript
 in browser.
 
+### driverOrElement.findContentWait(timeoutSec, selector, contentRegExp, [message])
+
+Shorthand to wait for an element containing specific innerText matching the given regex to be present.
+Also available on a WebElement.
+
+### elem.findClosest(selector)
+
+Find the closest ancestor of this element that matches the css selector.
+
 ### elem.doClick(), elem.doSendKeys(...), elem.doClear(), elem.doSubmit()
 
 Chainable variants of elem.click(), elem.sendKeys(), etc. E.g.
