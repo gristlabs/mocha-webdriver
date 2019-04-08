@@ -19,6 +19,23 @@ describe('webdriver-plus', () => {
         </div>
       `;
     }
+    function addDom(id: string, parentId?: string) {
+      const parentElem = parentId ? document.getElementById(parentId) : document.body;
+      if (parentElem) {
+        const elem = document.createElement('div');
+        elem.innerHTML += `<div id="${id}">Foo</div>`;
+        parentElem.appendChild(elem.firstChild!);
+      } else {
+        throw new Error(`Failed to find element with id "${parentId}"`);
+      }
+    }
+
+    // Calls addDom with a delay, ensuring that the element is not present before it is added.
+    async function addDomDelayed(waitMs: number, id: string, parentId?: string) {
+      await new Promise((r) => setTimeout(r, waitMs));
+      assert.equal(await driver.find(`#${id}`).isPresent(), false);
+      return driver.executeScript(addDom, id, parentId);
+    }
 
     before(async function() {
       this.timeout(20000);
@@ -51,16 +68,55 @@ describe('webdriver-plus', () => {
       assert.deepEqual(elemsMapped, ['World!', 'OK']);
     });
 
+    it('should wait for match with driver.findWait()', async function() {
+      // Start waiting for the component being added, then add it after 10ms.
+      const addAsync = addDomDelayed(10, 'waitForIt');
+      const [elemText] = await Promise.all([driver.findWait(1, '#waitForIt').getText(), addAsync]);
+      assert.equal(elemText, 'Foo');
+    });
+
+    it('should wait for child match with element.findWait()', async function() {
+      const root = await driver.find('#id1');
+      // Start waiting for the component being added, then add it after 10ms.
+      const addAsync = addDomDelayed(10, 'elemWaitForIt', 'id1');
+      const [elemText] = await Promise.all([root.findWait(1, '#elemWaitForIt').getText(), addAsync]);
+      assert.equal(elemText, 'Foo');
+    });
+
     it('should find matching content with driver.findContent()', async function() {
       assert.equal(await driver.findContent('.cls1', /B/).getText(), 'Bye');
       assert.equal(await driver.findContent('.cls1', /K$/).getText(), 'OK');
-      await assert.isRejected(driver.findContent('.cls1', /^K/).getText(), /None.*match/);
+      await assert.isRejected(driver.findContent('.cls1', /^K/).getText(), /No elements match/);
     });
 
     it('should find matching content among children with element.findContent()', async function() {
       const root = await driver.find("#id1");
-      await assert.isRejected(root.findContent('.cls1', /B/).getText(), /None.*match/);
+      await assert.isRejected(root.findContent('.cls1', /B/).getText(), /No elements match/);
       assert.equal(await root.findContent('.cls1', /K$/).getText(), 'OK');
+    });
+
+    it('should wait for matching content with driver.findContentWait()', async function() {
+      // Start waiting for the component being added, then add it after 10ms.
+      const addAsync = addDomDelayed(10, 'waitForContent');
+      const waitAsync = driver.findContentWait(1, '#waitForContent', /Foo/).getText();
+      const [elemText] = await Promise.all([waitAsync, addAsync]);
+      assert.equal(elemText, 'Foo');
+    });
+
+    it('should wait for child content match with element.findContentWait()', async function() {
+      const root = await driver.find('#id1');
+      // Start waiting for the component being added, then add it after 10ms.
+      const addAsync = addDomDelayed(10, 'elemWaitForContent', 'id1');
+      const waitAsync = root.findContentWait(1, '#elemWaitForContent', /Foo/).getText();
+      const [elemText] = await Promise.all([waitAsync, addAsync]);
+      assert.equal(elemText, 'Foo');
+    });
+
+    it('should find the closest matching ancestor with element.findClosest()', async function() {
+      const child = await driver.find(".cls2");
+      await assert.match(await child.findClosest('#id1').getText(), /Hello/);
+      await assert.isRejected(child.findClosest('#id2'), /No ancestor elements match/);
+      await assert.equal(await child.findClosest('#id2').isPresent(), false);
     });
 
     it('should support mouse methods', async function() {
