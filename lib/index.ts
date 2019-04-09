@@ -97,12 +97,18 @@ before(async function() {
   await driver.getSession();
 });
 
+// Helper to return whether the given suite had any failures.
+function suiteFailed(ctx: Mocha.Context): boolean {
+  let countFailed = 0;
+  const testParent = ctx.test!.parent!;
+  testParent.eachTest((test: any) => { countFailed += test.state === 'failed' ? 1 : 0; });
+  return countFailed > 0;
+}
+
 // Quit the webdriver and stop serving files, unless we failed and --no-exit is given.
 after(async function() {
-  let countFailed = 0;
   const testParent = this.test!.parent!;
-  testParent.eachTest((test: any) => { countFailed += test.state === 'failed' ? 1 : 0; });
-  if (countFailed > 0 && noexit) {
+  if (suiteFailed(this) && noexit) {
     const files = new Set<string>();
     testParent.eachTest((test: any) => { if (test.state === 'failed') { files.add(test.file); }});
 
@@ -122,14 +128,44 @@ async function cleanup(context: IMochaContext) {
   await Promise.all(Array.from(_servers, (server) => server.stop(context)));
 }
 
+/**
+ * Call in a test suite or at top level, to add a name to the debug-REPL context. If a test fails
+ * while in that suite, the name will be available in the REPL that you get with --no-exit flag.
+ *
+ * For example:
+ *    const fs = require('fs-extra');
+ *    describe("foo", () => {
+ *      addToRepl("fs", fs);     // "fs.readFile(...)" can now be used in the REPL
+ *    });
+ */
+export function addToRepl(name: string, value: any) {
+  after(function() {
+    if (suiteFailed(this) && noexit) {
+      replContext[name] = value;
+    }
+  });
+}
+
+// Contains the extra items to add to the REPL.
+const replContext: {[name: string]: any} = {};
+
 async function startRepl(files: string[]) {
   // Wait a bit to let mocha print out its errors before REPL prints its prompts.
   await new Promise((resolve) => setTimeout(resolve, 50));
 
-  // Continue running by keeping server and webdriver, and waiting for an hour.
+  // Continue running by keeping server and webdriver.
   // tslint:disable:no-console
   console.log("Not exiting. Abort with Ctrl-C, or type '.exit'");
+
+  const customContext: typeof replObj.context = {
+    driver,
+    resetModule,
+    rerun: rerun.bind(null, files),
+    ...replContext,   // user-supplied items from addToRepl() calls
+  };
+
   console.log("You may interact with the browser here, e.g. driver.find('.css_selector')");
+  console.log(`REPL context: ${Object.keys(customContext).join(", ")}`);
   console.log("Failed tests; may rerun with rerun() function:");
   for (const [i, file] of files.entries()) {
     console.log(`  rerun(${i === 0 ? '' : i}): ${file}`);
@@ -139,10 +175,8 @@ async function startRepl(files: string[]) {
   enhanceRepl(replObj);
 
   // Here are the extra globals available in the REPL prompt.
-  Object.assign(replObj.context, {
-    driver,
-    rerun: rerun.bind(null, files),
-  });
+  Object.assign(replObj.context, customContext);
+
   // This cleanup is called outside a mocha hook, so `timeout(ms)` does nothing.
   replObj.on('exit', () => cleanup({timeout: () => undefined}));
 }
@@ -179,4 +213,12 @@ async function useElementDescriptions(obj: any): Promise<any> {
   } else {
     return obj;
   }
+}
+
+/**
+ * REPL helper to delete a node module from cache to have it reloaded on next require(). This is
+ * useful when you make a change to a module, type "rerun()", and want this change visible.
+ */
+function resetModule(moduleName: string) {
+  delete require.cache[require.resolve(moduleName)];
 }

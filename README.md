@@ -164,6 +164,26 @@ If you change test code, you can re-run the failing test suite directly from thi
 
 This is much faster than starting up the test from scratch.
 
+If you modify some module during debugging in REPL, use the `resetModule(moduleName)` helper to
+have that module's code reloaded (the failed test's module itself always gets reloaded by
+`rerun()`). For example:
+
+```
+>>> resetModule('./testUtils');
+```
+
+If you need to use some module in the REPL, you may simply require it and use it. If you commonly
+need something, you can add extra context to the REPL using `addToRepl(name, value)` helper in any
+test suite or at top level. For example:
+
+```
+const fs = require('fs-extra');
+describe("foo", () => {
+  // Make "fs" available in the REPL if any of the "foo" tests fail (and "--no-exit" is used)
+  addToRepl("fs", fs);
+});
+```
+
 ## Serving content
 
 As with any webdriver tests, your test is just telling a browser what to do. It's up to you to
@@ -191,14 +211,15 @@ describe('fooTest', function() {
 
 //======================================================================
 // myServer.ts
-import {IMochaServer} from 'mocha-webdriver';
+import {IMochaContext, IMochaServer} from 'mocha-webdriver';
 import * as path from 'path';
 import * as serve from 'webpack-serve';
 
 export class MyWebpackServer implements IMochaServer {
   private _server: any;
 
-  public async start() {
+  public async start(ctx: IMochaContext) {
+    ctx.timeout(10000);   // Optionally, adjust the timeout.
     const config = require(path.resolve(__dirname, 'webpack.config.js'));
     this._server = await serve({}, {config});
   }
