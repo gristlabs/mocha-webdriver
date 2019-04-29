@@ -126,7 +126,7 @@ describe('webdriver-plus', () => {
       await driver.mouseDown();
       await driver.mouseMoveBy({x: 200});
       await driver.mouseUp();
-      assert.equal(await driver.executeScript(() => window.getSelection().toString().trim()), "World!");
+      assert.equal(await driver.executeScript(() => window.getSelection()!.toString().trim()), "World!");
     });
   });
 

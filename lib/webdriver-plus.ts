@@ -1,4 +1,4 @@
-import {Button, By, error, promise, until, WebDriver,
+import {Button, By, error, until, WebDriver,
         WebElement, WebElementCondition, WebElementPromise} from 'selenium-webdriver';
 
 // TODO: This is needed for the getRect() fix (see below).
@@ -28,7 +28,7 @@ export interface IFindInterface {
    * Shorthand to find all elements matching a css selector and to apply a mapper to each
    * of the found elements. e.g. findAll('a', (el) => el.getAttribute('href'))
    */
-  findAll<T>(selector: string, mapper: (e: WebElement) => promise.Promise<T>): Promise<T[]>;
+  findAll<T>(selector: string, mapper: (e: WebElement) => Promise<T>): Promise<T[]>;
 
   /**
    * Find elements by a css selector, and filter by innerText matching the given regex.
@@ -79,7 +79,7 @@ declare module "selenium-webdriver" {
     doClear(): WebElementPromise;
 
     // Shortcut to getAttribute('value')
-    value(): promise.Promise<string>;
+    value(): Promise<string>;
 
     // Returns a human-friendly description of this element.
     describe(): Promise<string>;
@@ -119,6 +119,12 @@ class WebElementRect implements ClientRect {
   get bottom(): number { return this.rect.y + this.rect.height; }
   get left(): number { return this.rect.x; }
   get right(): number { return this.rect.x + this.rect.width; }
+}
+
+// A version of `new WebElementCondition` that doesn't complain about correct types.
+function makeWebElementCondition(message: string, fn: (webdriver: WebDriver) => Promise<WebElement|null>) {
+  // The cast of `fn` is a hack to placate selenium's poor typings.
+  return new WebElementCondition(message, fn as (webdriver: WebDriver) => WebElementPromise);
 }
 
 async function findContentHelper(driver: WebDriver, finder: WebElement|null,
@@ -163,7 +169,7 @@ Object.assign(WebDriver.prototype, {
   async findAll<T>(
     this: WebDriver,
     selector: string,
-    mapper?: (e: WebElement) => promise.Promise<T>
+    mapper?: (e: WebElement) => Promise<T>
   ): Promise<WebElement[]|T[]> {
     const elems = await this.findElements(By.css(selector));
     return mapper ? Promise.all(elems.map(mapper)) : elems;
@@ -184,7 +190,7 @@ Object.assign(WebDriver.prototype, {
     contentRE: RegExp,
     message?: string
   ): WebElementPromise {
-    const condition = new WebElementCondition(`for element matching ${selector} and ${contentRE}`,
+    const condition = makeWebElementCondition(`for element matching ${selector} and ${contentRE}`,
       () => findContentIfPresent(this, null, selector, contentRE));
     return this.wait(condition, timeoutSec * 1000, message);
   },
@@ -221,14 +227,14 @@ Object.assign(WebElement.prototype, {
   async findAll<T>(
     this: WebElement,
     selector: string,
-    mapper?: (e: WebElement) => promise.Promise<T>
+    mapper?: (e: WebElement) => Promise<T>
   ): Promise<WebElement[]|T[]> {
     const elems = await this.findElements(By.css(selector));
     return mapper ? Promise.all(elems.map(mapper)) : elems;
   },
 
   findWait(this: WebElement, timeoutSec: number, selector: string, message?: string): WebElementPromise {
-    const condition = new WebElementCondition(`for element matching ${selector}`,
+    const condition = makeWebElementCondition(`for element matching ${selector}`,
       () => this.findElements(By.css(selector)).then((e) => e[0]));
     return this.getDriver().wait(condition, timeoutSec * 1000, message);
   },
@@ -244,7 +250,7 @@ Object.assign(WebElement.prototype, {
     contentRE: RegExp,
     message?: string
   ): WebElementPromise {
-    const condition = new WebElementCondition(`for element matching ${selector} and ${contentRE}`,
+    const condition = makeWebElementCondition(`for element matching ${selector} and ${contentRE}`,
       () => findContentIfPresent(this.getDriver(), this, selector, contentRE));
     return this.getDriver().wait(condition, timeoutSec * 1000, message);
   },
@@ -266,7 +272,7 @@ Object.assign(WebElement.prototype, {
     return new WebElementPromise(this.getDriver(), this.clear().then(() => this));
   },
 
-  value(this: WebElement): promise.Promise<string> {
+  value(this: WebElement): Promise<string> {
     return this.getAttribute('value');
   },
 
