@@ -74,7 +74,8 @@ before(async function() {
   process.env.PATH = path.resolve("node_modules", ".bin") + ":" + process.env.PATH;
 
   const chromeOpts = new chrome.Options();
-  const firefoxOpts = new firefox.Options();
+  // Typings for Firefox options are incomplete, so supplement them with Chrome's typings.
+  const firefoxOpts = new firefox.Options() as firefox.Options & chrome.Options;
 
   // Pay attention to the environment variables (documented in README).
   if (process.env.MOCHA_WEBDRIVER_HEADLESS) {
