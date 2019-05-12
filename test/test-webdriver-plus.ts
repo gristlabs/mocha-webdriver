@@ -3,6 +3,24 @@ import * as path from 'path';
 import {Key, WebElement} from 'selenium-webdriver';
 import {assert, driver} from '../lib';
 
+function addDom(id: string, parentId?: string) {
+  const parentElem = parentId ? document.getElementById(parentId) : document.body;
+  if (parentElem) {
+    const elem = document.createElement('div');
+    elem.innerHTML += `<div id="${id}">Foo</div>`;
+    parentElem.appendChild(elem.firstChild!);
+  } else {
+    throw new Error(`Failed to find element with id "${parentId}"`);
+  }
+}
+
+// Calls addDom with a delay, ensuring that the element is not present before it is added.
+async function addDomDelayed(waitMs: number, id: string, parentId?: string) {
+  await new Promise((r) => setTimeout(r, waitMs));
+  assert.equal(await driver.find(`#${id}`).isPresent(), false);
+  return driver.executeScript(addDom, id, parentId);
+}
+
 describe('webdriver-plus', () => {
   describe('find methods', function() {
     function createDom() {
@@ -18,23 +36,6 @@ describe('webdriver-plus', () => {
           <div class="cls1">Bye</div>
         </div>
       `;
-    }
-    function addDom(id: string, parentId?: string) {
-      const parentElem = parentId ? document.getElementById(parentId) : document.body;
-      if (parentElem) {
-        const elem = document.createElement('div');
-        elem.innerHTML += `<div id="${id}">Foo</div>`;
-        parentElem.appendChild(elem.firstChild!);
-      } else {
-        throw new Error(`Failed to find element with id "${parentId}"`);
-      }
-    }
-
-    // Calls addDom with a delay, ensuring that the element is not present before it is added.
-    async function addDomDelayed(waitMs: number, id: string, parentId?: string) {
-      await new Promise((r) => setTimeout(r, waitMs));
-      assert.equal(await driver.find(`#${id}`).isPresent(), false);
-      return driver.executeScript(addDom, id, parentId);
     }
 
     before(async function() {
@@ -206,6 +207,21 @@ describe('webdriver-plus', () => {
       assert.equal(await driver.find('#btn').find('.zzzz').isPresent(), false);
       assert.equal(await driver.findContent('#btn', /Hello/).isPresent(), true);
       assert.equal(await driver.findContent('#btn', /Bonjour/).isPresent(), false);
+
+      // isPresent() should return false for stale elements.
+      await addDomDelayed(0, "acorn");
+      const acorn = await driver.findWait(1, "#acorn");
+      assert.equal(await driver.findWait(1, "#acorn").isPresent(), true);
+
+      // Remove the element from DOM.
+      await driver.executeScript(function() { document.getElementById('acorn')!.remove(); });
+      assert.equal(await driver.find("#acorn").isPresent(), false);
+      assert.equal(await acorn.isPresent(), false);
+
+      // Add another idential element: for old reference, isPresent() should still be false.
+      await addDomDelayed(0, "acorn");
+      assert.equal(await driver.findWait(1, "#acorn").isPresent(), true);
+      assert.equal(await acorn.isPresent(), false);
     });
   });
 });

@@ -97,7 +97,7 @@ declare module "selenium-webdriver" {
     // Returns whether this element is the current activeElement.
     hasFocus(): Promise<boolean>;
 
-    // Returns whether this element is present.
+    // Returns whether this element is present in the DOM of the current page.
     isPresent(): Promise<boolean>;
   }
 
@@ -317,10 +317,14 @@ Object.assign(WebElement.prototype, {
   },
   async isPresent(this: WebElement): Promise<boolean> {
     try {
-      await this.getId();
+      // We use getTagName() to capture both not-found errors and stale-element errors (getId()
+      // does not make a browser call and does not detect staleness.)
+      await this.getTagName();
       return true;
     } catch (e) {
-      if (e.name === 'NoSuchElementError') { return false; }
+      if (e.name === 'NoSuchElementError' || e.name === 'StaleElementReferenceError') {
+        return false;
+      }
       throw e;
     }
   },
