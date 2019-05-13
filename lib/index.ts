@@ -99,7 +99,7 @@ before(async function() {
   await driver.getSession();
 
   // If requested, limit the max number of parallel in-flight selenium calls. This is needed for
-  // selenium-standalone, which can't cope with more than a few calls. A limit like 3 works fine.
+  // selenium-standalone, which can't cope with more than a few calls. A limit like 5 works fine.
   // See also https://github.com/SeleniumHQ/selenium/issues/5611
   if (process.env.MOCHA_WEBDRIVER_MAX_CALLS) {
     const count = parseInt(process.env.MOCHA_WEBDRIVER_MAX_CALLS, 10);
