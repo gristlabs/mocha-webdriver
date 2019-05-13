@@ -6,6 +6,7 @@ import * as repl from 'repl';
 import {Builder, logging, WebDriver, WebElement} from 'selenium-webdriver';
 import * as chrome from 'selenium-webdriver/chrome';
 import * as firefox from 'selenium-webdriver/firefox';
+import {serializeCalls} from './serialize-calls';
 import "./webdriver-plus";
 
 chai.use(chaiAsPromised);
@@ -96,6 +97,16 @@ before(async function() {
     .build();
   // If driver fails to start, this will let us notice and abort quickly.
   await driver.getSession();
+
+  // If requested, limit the max number of parallel in-flight selenium calls. This is needed for
+  // selenium-standalone, which can't cope with more than a few calls. A limit like 3 works fine.
+  // See also https://github.com/SeleniumHQ/selenium/issues/5611
+  if (process.env.MOCHA_WEBDRIVER_MAX_CALLS) {
+    const count = parseInt(process.env.MOCHA_WEBDRIVER_MAX_CALLS, 10);
+    if (!(count > 0)) { throw new Error("Invalid value for MOCHA_WEBDRIVER_MAX_CALLS env var"); }
+    const executor = driver.getExecutor();
+    executor.execute = serializeCalls(executor.execute, count);
+  }
 });
 
 // Helper to return whether the given suite had any failures.
