@@ -51,6 +51,10 @@ for other variables). Some additional environment variables are also supported:
 
   - `MOCHA_WEBDRIVER_HEADLESS`: start browser in headless mode if set to non-empty value
   - `MOCHA_WEBDRIVER_ARGS`: pass the given args to the browser (e.g. `--disable-gpu --foo=bar`)
+  - `MOCHA_WEBDRIVER_MAX_CALLS`: limit the number of parallel selenium calls to this number, e.g. 3.
+You can use this to work around an
+[issue](https://github.com/SeleniumHQ/selenium/issues/5611) in
+[selenium-standalone](https://github.com/vvo/selenium-standalone), causing "Connection reset" errors.
 
 ## Useful methods
 
@@ -130,6 +134,10 @@ method. E.g. `await driver.find('#btn').mouseMove({x: 100}).doClick()`.
 ### elem.hasFocus()
 
 Returns whether this element is the current activeElement.
+
+### elem.isPresent()
+
+Returns whether this element is present in the DOM of the current page.
 
 ### driver.mouseDown(button?), driver.mouseUp(button?)
 
