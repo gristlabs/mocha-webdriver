@@ -1,6 +1,8 @@
 import {Button, By, error, until, WebDriver,
         WebElement, WebElementCondition, WebElementPromise} from 'selenium-webdriver';
 
+import {driverSaveScreenshot} from './screenshots';
+
 // TODO: This is needed for the getRect() fix (see below).
 // tslint:disable-next-line:no-var-requires
 const command = require('selenium-webdriver/lib/command');
@@ -64,6 +66,16 @@ declare module "selenium-webdriver" {
     // Helper to execute actions using new webdriver driver.actions() flow, for which typings are
     // not currently updated (as of Jan 2019).
     withActions(cb: (actions: any) => void): Promise<void>;
+
+    /**
+     * Takes a screenshot, and saves it to MW_SCREENSHOT_DIR/screenshot-{N}.png if the
+     * MW_SCREENSHOT_DIR environment variable is set.
+     *
+     * - relPath may specify a different destination filename, relative to MW_SCREENSHOT_DIR.
+     * - relPath may include "{N}" token, to replace with "1", "2", etc to find an available name.
+     * - dir may specify a different destination directory. If empty, the screenshot will be skipped.
+     */
+    saveScreenshot(relPath?: string, dir?: string): Promise<string|undefined>;
   }
 
   /**
@@ -216,6 +228,8 @@ Object.assign(WebDriver.prototype, {
     cb(actions);
     return actions.perform();
   },
+
+  saveScreenshot: driverSaveScreenshot,
 });
 
 // Enhance WebElement to implement IWebElementPlus interface.

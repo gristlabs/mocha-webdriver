@@ -23,6 +23,9 @@ export {assert} from 'chai';
  */
 export * from 'selenium-webdriver';
 
+// Re-export function that sets up an afterEach() hook to save screenshots of failed tests.
+export {setupScreenshots} from './screenshots';
+
 /**
  * Use `import {driver} from 'webdriver-mocha'. Note that it's already enhanced with extra methods
  * by "webdriver-plus" module.
@@ -173,6 +176,8 @@ async function startRepl(files: string[]) {
     driver,
     resetModule,
     rerun: rerun.bind(null, files),
+    // In REPL, screenshot() saves an image to './screenshot-{N}.png', or the path you provide.
+    screenshot: (filePath?: string) => driver.saveScreenshot(filePath, "."),
     ...replContext,   // user-supplied items from addToRepl() calls
   };
 
