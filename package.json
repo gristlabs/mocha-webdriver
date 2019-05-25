@@ -35,6 +35,7 @@
     "chai": "^4.1.2",
     "chai-as-promised": "^7.1.1",
     "chromedriver": "^74.0.0",
+    "fs-extra": "^8.0.1",
     "geckodriver": "^1.16.2",
     "mocha": "^6.1.4",
     "selenium-webdriver": "^4.0.0-alpha.1"
@@ -43,6 +44,7 @@
     "@types/chai": "^4.1.4",
     "@types/chai-as-promised": "^7.1.0",
     "@types/color-string": "^1.5.0",
+    "@types/fs-extra": "^7.0.0",
     "@types/mocha": "^5.2.6",
     "@types/node": "^11.13.8",
     "@types/selenium-webdriver": "^4.0.0",
