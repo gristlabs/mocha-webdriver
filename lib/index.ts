@@ -46,7 +46,8 @@ export interface IMochaContext {
   timeout(ms: number): void;
 }
 
-const _servers: Set<IMochaServer> = new Set();
+// Maps server objects to their "ready" promise.
+const _servers: Map<IMochaServer, Promise<void>> = new Map();
 
 /**
  * Use this from a test suite (i.e. inside a describe() clause) to start the given server. If the
@@ -55,9 +56,9 @@ const _servers: Set<IMochaServer> = new Set();
 export function useServer(server: IMochaServer) {
   before(async function() {
     if (!_servers.has(server)) {
-      _servers.add(server);
-      await server.start(this);
+      _servers.set(server, server.start(this));
     }
+    await _servers.get(server);
   });
   // Stopping of the started-up servers happens in cleanup().
 }
@@ -162,7 +163,7 @@ async function cleanup(context: IMochaContext) {
   if (driver) { promises.push(driver.quit()); }
 
   // Stop all servers registered with useServer().
-  promises.push(...Array.from(_servers, (server) => server.stop(context)));
+  promises.push(...Array.from(_servers.keys(), (server) => server.stop(context)));
 
   // Wait for all cleanup to complete.
   await Promise.all(promises);
