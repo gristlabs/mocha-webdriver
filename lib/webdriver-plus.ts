@@ -111,6 +111,13 @@ declare module "selenium-webdriver" {
 
     // Returns whether this element is present in the DOM of the current page.
     isPresent(): Promise<boolean>;
+
+    // Returns the 0-based index of this element among its sibling elements.
+    index(): Promise<number>;
+
+    // Returns whether this element matches the given selector. This is more general than a
+    // hypothetical hasClass(). E.g. matches(".red") or matches(".foo.bar:active").
+    matches(selector: string): Promise<boolean>;
   }
 
   // These are just missing typings.
@@ -341,5 +348,15 @@ Object.assign(WebElement.prototype, {
       }
       throw e;
     }
+  },
+  async index(this: WebElement): Promise<number> {
+    return this.getDriver().executeScript<number>(function(elem: Element) {
+      return Array.prototype.indexOf.call(elem.parentElement!.children, elem);
+    }, this);
+  },
+  async matches(this: WebElement, selector: string): Promise<boolean> {
+    return this.getDriver().executeScript<boolean>(function(elem: Element, _sel: string) {
+      return elem.matches(_sel);
+    }, this, selector);
   },
 });

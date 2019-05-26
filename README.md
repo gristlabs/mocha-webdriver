@@ -136,11 +136,21 @@ method. E.g. `await driver.find('#btn').mouseMove({x: 100}).doClick()`.
 
 ### elem.hasFocus()
 
-Returns whether this element is the current activeElement.
+Returns whether this element is the current activeElement. Note that `matches(":focus")` may also
+be used to the same effect.
 
 ### elem.isPresent()
 
 Returns whether this element is present in the DOM of the current page.
+
+### elem.index()
+
+Returns the 0-based index of this element among its sibling elements.
+
+### elem.matches(selector)
+
+Returns whether this element matches the given CSS selector. For instance, check if an element has a
+class, use `matches(".red")`. You can use any selector, e.g. `matches(".foo:active > li")`.
 
 ### driver.mouseDown(button?), driver.mouseUp(button?)
 
