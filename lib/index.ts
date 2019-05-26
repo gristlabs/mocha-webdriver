@@ -86,6 +86,26 @@ before(async function() {
     chromeOpts.headless();
     firefoxOpts.headless();
   }
+
+  if (process.env.MOCHA_WEBDRIVER_WINSIZE) {
+    // This should have the form WIDTHxHEIGHT, e.g. 900x600.
+    // Note that the result is not precise. For a requested size of 600x600, the resulting
+    // dimensions of the screenshot (at least in May 2019) were:
+    //    Chrome: 600x477
+    //    Chrome headless: 600x600
+    //    Firefox: 600x548
+    //    Firefox headless: 600x526
+    //
+    // Using driver.manage().window().setRect() generally produces the same result, except on
+    // Firefox (not headless), that call resized it to 600x526.
+    const [widthStr, heightStr] = process.env.MOCHA_WEBDRIVER_WINSIZE.split("x");
+    const width = parseFloat(widthStr);
+    const height = parseFloat(heightStr);
+    chromeOpts.windowSize({width, height});
+    // Firefox has a windowSize() method, but as of 4.0.0-alpha.1 and Firefox 66, it's wrong.
+    firefoxOpts.addArguments("-width", widthStr, "-height", heightStr);
+  }
+
   if (process.env.MOCHA_WEBDRIVER_ARGS) {
     const args = process.env.MOCHA_WEBDRIVER_ARGS.trim().split(/\s+/);
     chromeOpts.addArguments(...args);
