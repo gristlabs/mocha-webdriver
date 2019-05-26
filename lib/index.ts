@@ -157,10 +157,15 @@ after(async function() {
 });
 
 async function cleanup(context: IMochaContext) {
-  if (driver) { await driver.quit(); }
+  // Start all cleanup in parallel, so that hangup of driver.quit does not block other cleanup.
+  const promises: Array<Promise<void>> = [];
+  if (driver) { promises.push(driver.quit()); }
 
   // Stop all servers registered with useServer().
-  await Promise.all(Array.from(_servers, (server) => server.stop(context)));
+  promises.push(...Array.from(_servers, (server) => server.stop(context)));
+
+  // Wait for all cleanup to complete.
+  await Promise.all(promises);
 }
 
 /**
