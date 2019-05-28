@@ -23,6 +23,9 @@ export {assert} from 'chai';
  */
 export * from 'selenium-webdriver';
 
+// Re-export function that sets up an afterEach() hook to save screenshots of failed tests.
+export {setupScreenshots} from './screenshots';
+
 /**
  * Use `import {driver} from 'webdriver-mocha'. Note that it's already enhanced with extra methods
  * by "webdriver-plus" module.
@@ -43,7 +46,8 @@ export interface IMochaContext {
   timeout(ms: number): void;
 }
 
-const _servers: Set<IMochaServer> = new Set();
+// Maps server objects to their "ready" promise.
+const _servers: Map<IMochaServer, Promise<void>> = new Map();
 
 /**
  * Use this from a test suite (i.e. inside a describe() clause) to start the given server. If the
@@ -52,9 +56,9 @@ const _servers: Set<IMochaServer> = new Set();
 export function useServer(server: IMochaServer) {
   before(async function() {
     if (!_servers.has(server)) {
-      _servers.add(server);
-      await server.start(this);
+      _servers.set(server, server.start(this));
     }
+    await _servers.get(server);
   });
   // Stopping of the started-up servers happens in cleanup().
 }
@@ -83,6 +87,26 @@ before(async function() {
     chromeOpts.headless();
     firefoxOpts.headless();
   }
+
+  if (process.env.MOCHA_WEBDRIVER_WINSIZE) {
+    // This should have the form WIDTHxHEIGHT, e.g. 900x600.
+    // Note that the result is not precise. For a requested size of 600x600, the resulting
+    // dimensions of the screenshot (at least in May 2019) were:
+    //    Chrome: 600x477
+    //    Chrome headless: 600x600
+    //    Firefox: 600x548
+    //    Firefox headless: 600x526
+    //
+    // Using driver.manage().window().setRect() generally produces the same result, except on
+    // Firefox (not headless), that call resized it to 600x526.
+    const [widthStr, heightStr] = process.env.MOCHA_WEBDRIVER_WINSIZE.split("x");
+    const width = parseFloat(widthStr);
+    const height = parseFloat(heightStr);
+    chromeOpts.windowSize({width, height});
+    // Firefox has a windowSize() method, but as of 4.0.0-alpha.1 and Firefox 66, it's wrong.
+    firefoxOpts.addArguments("-width", widthStr, "-height", heightStr);
+  }
+
   if (process.env.MOCHA_WEBDRIVER_ARGS) {
     const args = process.env.MOCHA_WEBDRIVER_ARGS.trim().split(/\s+/);
     chromeOpts.addArguments(...args);
@@ -134,10 +158,15 @@ after(async function() {
 });
 
 async function cleanup(context: IMochaContext) {
-  if (driver) { await driver.quit(); }
+  // Start all cleanup in parallel, so that hangup of driver.quit does not block other cleanup.
+  const promises: Array<Promise<void>> = [];
+  if (driver) { promises.push(driver.quit()); }
 
   // Stop all servers registered with useServer().
-  await Promise.all(Array.from(_servers, (server) => server.stop(context)));
+  promises.push(...Array.from(_servers.keys(), (server) => server.stop(context)));
+
+  // Wait for all cleanup to complete.
+  await Promise.all(promises);
 }
 
 /**
@@ -173,6 +202,8 @@ async function startRepl(files: string[]) {
     driver,
     resetModule,
     rerun: rerun.bind(null, files),
+    // In REPL, screenshot() saves an image to './screenshot-{N}.png', or the path you provide.
+    screenshot: (filePath?: string) => driver.saveScreenshot(filePath, "."),
     ...replContext,   // user-supplied items from addToRepl() calls
   };
 

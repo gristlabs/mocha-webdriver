@@ -139,6 +139,16 @@ describe('webdriver-plus', () => {
           <input id="inp" type="text">
           <button id="btn">Hello</button>
         </div>
+        <div id="container">
+          Hello
+          <span class="foo">Hello</span>
+          <span class="bar1"><div class="bar2">World!</div></span>
+          Text
+          <!-- comment -->
+          <div class="baz">World!</div>
+          Text
+          <span class="boo">!</span>
+        </div>
       `;
     }
     before(async function() {
@@ -199,6 +209,9 @@ describe('webdriver-plus', () => {
       await driver.sendKeys(Key.TAB);
       assert.equal(await driver.find('#inp').hasFocus(), false);
       assert.equal(await driver.find('#btn').hasFocus(), true);
+
+      // See also the test case for matches(), which shows how .matches(':focus') can be used for
+      // the same purpose.
     });
 
     it('should support isPresent', async function() {
@@ -222,6 +235,42 @@ describe('webdriver-plus', () => {
       await addDomDelayed(0, "acorn");
       assert.equal(await driver.findWait(1, "#acorn").isPresent(), true);
       assert.equal(await acorn.isPresent(), false);
+    });
+
+    it('should support index() among sibling element', async function() {
+      assert.equal(await driver.find('#id1').index(), 1);
+      assert.equal(await driver.find('#inp').index(), 0);
+
+      // Check the various children of .children element. Note that we are finding index among
+      // sibling Elements, not Nodes, e.g. text nodes and comments are ignored.
+      assert.equal(await driver.find('#container .foo').index(), 0);
+      assert.equal(await driver.find('#container .bar1').index(), 1);
+      assert.equal(await driver.find('#container .baz').index(), 2);
+      assert.equal(await driver.find('#container .boo').index(), 3);
+      // Note that .bar2 is a sole child of .bar1, not of .container
+      assert.equal(await driver.find('#container .bar2').index(), 0);
+    });
+
+    it('should support matches() to check a selector match', async function() {
+      assert.isTrue(await driver.find('.cls0').matches('div#id1.cls0.test0'));
+      assert.isTrue(await driver.find('.cls0').matches('.cls0'));
+      assert.isTrue(await driver.find('.cls0').matches(' .cls0 ')); // Whitespace is OK.
+      assert.isFalse(await driver.find('.cls0').matches('.cls'));   // Check no substring matches
+      assert.isFalse(await driver.find('.cls0').matches('.id1'));
+      assert.isTrue(await driver.find('.cls0').matches('#id1'));
+
+      // Try more complex selectors.
+      assert.isTrue(await driver.find('.bar2').matches('#container .bar2'));
+      assert.isTrue(await driver.find('.bar2').matches('#container > .bar1 > :not(.bar1)'));
+
+      // Should be usable as an alternative way to check focus, using :focus pseudo-class.
+      // This replicates the hasFocus() test.
+      await driver.find('#inp').click();
+      assert.equal(await driver.find('#inp').matches(':focus'), true);
+      assert.equal(await driver.find('#btn').matches(':focus'), false);
+      await driver.sendKeys(Key.TAB);
+      assert.equal(await driver.find('#inp').matches(':focus'), false);
+      assert.equal(await driver.find('#btn').matches(':focus'), true);
     });
   });
 });

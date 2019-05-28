@@ -51,10 +51,13 @@ for other variables). Some additional environment variables are also supported:
 
   - `MOCHA_WEBDRIVER_HEADLESS`: start browser in headless mode if set to non-empty value
   - `MOCHA_WEBDRIVER_ARGS`: pass the given args to the browser (e.g. `--disable-gpu --foo=bar`)
+  - `MOCHA_WEBDRIVER_WINSIZE`: start browser with the given window size, given as `WIDTHxHEIGHT` (e.g. `900x600`)
   - `MOCHA_WEBDRIVER_MAX_CALLS`: limit the number of parallel selenium calls to this number, e.g. `5`.
 You can use this to work around an
 [issue](https://github.com/SeleniumHQ/selenium/issues/5611) in
 [selenium-standalone](https://github.com/vvo/selenium-standalone), causing "Connection reset" errors.
+  - `MW_SCREENSHOT_DIR`: in conjunction with [setupScreenshots](#setupscreenshotsdriver), a
+directory into which to save screenshots automatically after any failed test case.
 
 ## Useful methods
 
@@ -133,11 +136,21 @@ method. E.g. `await driver.find('#btn').mouseMove({x: 100}).doClick()`.
 
 ### elem.hasFocus()
 
-Returns whether this element is the current activeElement.
+Returns whether this element is the current activeElement. Note that `matches(":focus")` may also
+be used to the same effect.
 
 ### elem.isPresent()
 
 Returns whether this element is present in the DOM of the current page.
+
+### elem.index()
+
+Returns the 0-based index of this element among its sibling elements.
+
+### elem.matches(selector)
+
+Returns whether this element matches the given CSS selector. For instance, check if an element has a
+class, use `matches(".red")`. You can use any selector, e.g. `matches(".foo:active > li")`.
 
 ### driver.mouseDown(button?), driver.mouseUp(button?)
 
@@ -151,6 +164,25 @@ Moves the mouse by the given offset relative to its current position.
 
 Send keys to the window.
 
+### driver.saveScreenshot(relPath?, dir?)
+
+Takes a screenshot, and saves it to `MW_SCREENSHOT_DIR/screenshot-{N}.png` if the
+`MW_SCREENSHOT_DIR` environment variable is set.
+
+ - `relPath` may specify a different destination filename, relative to `MW_SCREENSHOT_DIR`.
+ - `relPath` may include `{N}` token, to replace with "1", "2", etc to find an
+available name. (While `relPath` may includes subdirectories, the `{N}` token
+may only be used in the filename part.)
+ - `dir` may specify a different destination directory. If empty, the screenshot will be skipped.
+
+### setupScreenshots()
+
+If called in a mocha test suite (i.e. inside `describe()`), adds an `afterEach` hook to save a
+screenshot after any failed test, only if `MW_SCREENSHOT_DIR` variable is set. The image is named
+`MW_SCREENSHOT_DIR/screenshot-{name}-{N}.png`, where `name` is the basename of the test file, and
+`N` is a numeric suffix.
+
+This is helpful for debugging when running tests in headless mode.
 
 ## Debugging tests
 
@@ -191,6 +223,15 @@ describe("foo", () => {
   addToRepl("fs", fs);
 });
 ```
+
+If debugging in headless mode, you can use screenshots to see what's happening on the virtual
+screen. In REPL, `screenshot()` function is available to assist with that:
+
+```
+>>> screenshot()              // saves screenshot to "./screenshot-1.png", "./screenshot-2.png", etc.
+>>> screenshot("snap.png")    // saves screenshot to "./snap.png"
+```
+
 
 ## Serving content
 

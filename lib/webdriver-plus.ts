@@ -1,6 +1,8 @@
 import {Button, By, error, until, WebDriver,
         WebElement, WebElementCondition, WebElementPromise} from 'selenium-webdriver';
 
+import {driverSaveScreenshot} from './screenshots';
+
 // TODO: This is needed for the getRect() fix (see below).
 // tslint:disable-next-line:no-var-requires
 const command = require('selenium-webdriver/lib/command');
@@ -64,6 +66,16 @@ declare module "selenium-webdriver" {
     // Helper to execute actions using new webdriver driver.actions() flow, for which typings are
     // not currently updated (as of Jan 2019).
     withActions(cb: (actions: any) => void): Promise<void>;
+
+    /**
+     * Takes a screenshot, and saves it to MW_SCREENSHOT_DIR/screenshot-{N}.png if the
+     * MW_SCREENSHOT_DIR environment variable is set.
+     *
+     * - relPath may specify a different destination filename, relative to MW_SCREENSHOT_DIR.
+     * - relPath may include "{N}" token, to replace with "1", "2", etc to find an available name.
+     * - dir may specify a different destination directory. If empty, the screenshot will be skipped.
+     */
+    saveScreenshot(relPath?: string, dir?: string): Promise<string|undefined>;
   }
 
   /**
@@ -99,6 +111,13 @@ declare module "selenium-webdriver" {
 
     // Returns whether this element is present in the DOM of the current page.
     isPresent(): Promise<boolean>;
+
+    // Returns the 0-based index of this element among its sibling elements.
+    index(): Promise<number>;
+
+    // Returns whether this element matches the given selector. This is more general than a
+    // hypothetical hasClass(). E.g. matches(".red") or matches(".foo.bar:active").
+    matches(selector: string): Promise<boolean>;
   }
 
   // These are just missing typings.
@@ -216,6 +235,8 @@ Object.assign(WebDriver.prototype, {
     cb(actions);
     return actions.perform();
   },
+
+  saveScreenshot: driverSaveScreenshot,
 });
 
 // Enhance WebElement to implement IWebElementPlus interface.
@@ -327,5 +348,15 @@ Object.assign(WebElement.prototype, {
       }
       throw e;
     }
+  },
+  async index(this: WebElement): Promise<number> {
+    return this.getDriver().executeScript<number>(function(elem: Element) {
+      return Array.prototype.indexOf.call(elem.parentElement!.children, elem);
+    }, this);
+  },
+  async matches(this: WebElement, selector: string): Promise<boolean> {
+    return this.getDriver().executeScript<boolean>(function(elem: Element, _sel: string) {
+      return elem.matches(_sel);
+    }, this, selector);
   },
 });
