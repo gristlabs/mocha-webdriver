@@ -170,7 +170,9 @@ Takes a screenshot, and saves it to `MW_SCREENSHOT_DIR/screenshot-{N}.png` if th
 `MW_SCREENSHOT_DIR` environment variable is set.
 
  - `relPath` may specify a different destination filename, relative to `MW_SCREENSHOT_DIR`.
- - `relPath` may include `{N}` token, to replace with "1", "2", etc to find an available name.
+ - `relPath` may include `{N}` token, to replace with "1", "2", etc to find an
+available name. (While `relPath` may includes subdirectories, the `{N}` token
+may only be used in the filename part.)
  - `dir` may specify a different destination directory. If empty, the screenshot will be skipped.
 
 ### setupScreenshots()
