@@ -56,8 +56,10 @@ for other variables). Some additional environment variables are also supported:
 You can use this to work around an
 [issue](https://github.com/SeleniumHQ/selenium/issues/5611) in
 [selenium-standalone](https://github.com/vvo/selenium-standalone), causing "Connection reset" errors.
-  - `MW_SCREENSHOT_DIR`: in conjunction with [setupScreenshots](#setupscreenshotsdriver), a
-directory into which to save screenshots automatically after any failed test case.
+  - `MOCHA_WEBDRIVER_LOGDIR`: in conjunction with [setUpDebugCapture](#setupdebugcapture), a
+directory into which to save logs and screenshots automatically after any failed test case.
+  - `MOCHA_WEBDRIVER_LOGTYPES`: comma-separated list of which [log types](https://seleniumhq.github.io/selenium/docs/api/javascript/module/selenium-webdriver/lib/logging_exports_Type.html)
+to enable, for `driver.fetchLogs()` and for `setUpDebugCapture()`. Defaults to `browser,driver`.
 
 ## Useful methods
 
@@ -175,14 +177,16 @@ available name. (While `relPath` may includes subdirectories, the `{N}` token
 may only be used in the filename part.)
  - `dir` may specify a different destination directory. If empty, the screenshot will be skipped.
 
-### setupScreenshots()
+### setUpDebugCapture()
 
-If called in a mocha test suite (i.e. inside `describe()`), adds an `afterEach` hook to save a
-screenshot after any failed test, only if `MW_SCREENSHOT_DIR` variable is set. The image is named
-`MW_SCREENSHOT_DIR/screenshot-{name}-{N}.png`, where `name` is the basename of the test file, and
-`N` is a numeric suffix.
+If called in a mocha test suite (i.e. inside `describe()`), adds an `afterEach` hook to save logs
+and a screenshot after any failed test, only if `MOCHA_WEBDRIVER_LOGDIR` variable is set. The
+files are named:
+  - `MOCHA_WEBDRIVER_LOGDIR/{name}-{logtype}-{N}.log`
+  - `MOCHA_WEBDRIVER_LOGDIR/{name}-screenshot-{N}.png`,
+where `name` is the basename of the test file, and `N` is a numeric suffix.
 
-This is helpful for debugging when running tests in headless mode.
+This is helpful for debugging failing tests. Screenshots are particularly helpful in headless mode.
 
 ## Debugging tests
 

@@ -1,6 +1,7 @@
 import {Button, By, error, until, WebDriver,
         WebElement, WebElementCondition, WebElementPromise} from 'selenium-webdriver';
 
+import {_fetchLogs, LogType} from './logs';
 import {driverSaveScreenshot} from './screenshots';
 
 // TODO: This is needed for the getRect() fix (see below).
@@ -76,6 +77,12 @@ declare module "selenium-webdriver" {
      * - dir may specify a different destination directory. If empty, the screenshot will be skipped.
      */
     saveScreenshot(relPath?: string, dir?: string): Promise<string|undefined>;
+
+    /**
+     * Fetches new log messages (since last such call) for the given LogType (e.g. "browser" or
+     * "driver"), converting it to a list of human-friendly strings.
+     */
+    fetchLogs(logType: LogType): Promise<string[]>;
   }
 
   /**
@@ -237,6 +244,7 @@ Object.assign(WebDriver.prototype, {
   },
 
   saveScreenshot: driverSaveScreenshot,
+  fetchLogs: _fetchLogs,
 });
 
 // Enhance WebElement to implement IWebElementPlus interface.

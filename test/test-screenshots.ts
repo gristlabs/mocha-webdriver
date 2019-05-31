@@ -9,13 +9,13 @@ describe('screenshots', function() {
 
   before(async function() {
     tmpDir = await fse.mkdtemp(path.join(os.tmpdir(), 'test-mw-screenshots-'));
-    origScreenshotDir = process.env.MW_SCREENSHOT_DIR;
+    origScreenshotDir = process.env.MOCHA_WEBDRIVER_LOGDIR;
     await driver.get('file://' + path.resolve(__dirname, 'blank.html'));
   });
 
   after(async function() {
     // Restore the original value of the env var, in case we have other tests and care about it.
-    process.env.MW_SCREENSHOT_DIR = origScreenshotDir;
+    process.env.MOCHA_WEBDRIVER_LOGDIR = origScreenshotDir;
 
     // Check what we are removing, just to be safe.
     if (tmpDir && tmpDir.includes("screenshots")) {
@@ -23,8 +23,8 @@ describe('screenshots', function() {
     }
   });
 
-  it('should save screenshots when MW_SCREENSHOT_DIR is set', async function() {
-    process.env.MW_SCREENSHOT_DIR = tmpDir;
+  it('should save screenshots when MOCHA_WEBDRIVER_LOGDIR is set', async function() {
+    process.env.MOCHA_WEBDRIVER_LOGDIR = tmpDir;
 
     const path1 = await driver.saveScreenshot();
     assert.equal(path1, path.join(tmpDir, "screenshot-1.png"));
@@ -36,7 +36,7 @@ describe('screenshots', function() {
 
   it('should respect relPath argument when saving screenshots', async function() {
     this.timeout(10000);
-    process.env.MW_SCREENSHOT_DIR = tmpDir;
+    process.env.MOCHA_WEBDRIVER_LOGDIR = tmpDir;
 
     {
       const p = await driver.saveScreenshot('foo.png');
@@ -68,8 +68,8 @@ describe('screenshots', function() {
     }
   });
 
-  it('should not save screenshots when MW_SCREENSHOT_DIR is unset', async function() {
-    delete process.env.MW_SCREENSHOT_DIR;
+  it('should not save screenshots when MOCHA_WEBDRIVER_LOGDIR is unset', async function() {
+    delete process.env.MOCHA_WEBDRIVER_LOGDIR;
 
     const origFiles = await fse.readdir(tmpDir);
     const path1 = await driver.saveScreenshot();
@@ -77,8 +77,8 @@ describe('screenshots', function() {
     assert.deepEqual(await fse.readdir(tmpDir), origFiles);
   });
 
-  it('should save screenshots when dir is given, even with MW_SCREENSHOT_DIR unset', async function() {
-    delete process.env.MW_SCREENSHOT_DIR;
+  it('should save screenshots when dir is given, even with MOCHA_WEBDRIVER_LOGDIR unset', async function() {
+    delete process.env.MOCHA_WEBDRIVER_LOGDIR;
 
     const path1 = await driver.saveScreenshot(undefined, path.join(tmpDir, "forced"));
     assert.equal(path1, path.join(tmpDir, "forced/screenshot-1.png"));

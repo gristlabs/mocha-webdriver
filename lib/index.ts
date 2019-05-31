@@ -6,6 +6,7 @@ import * as repl from 'repl';
 import {Builder, logging, WebDriver, WebElement} from 'selenium-webdriver';
 import * as chrome from 'selenium-webdriver/chrome';
 import * as firefox from 'selenium-webdriver/firefox';
+import {getEnabledLogTypes} from './logs';
 import {serializeCalls} from './serialize-calls';
 import "./webdriver-plus";
 
@@ -24,7 +25,8 @@ export {assert} from 'chai';
 export * from 'selenium-webdriver';
 
 // Re-export function that sets up an afterEach() hook to save screenshots of failed tests.
-export {setupScreenshots} from './screenshots';
+export {setUpDebugCapture} from './debugging';
+export {LogType, logTypes} from './logs';
 
 /**
  * Use `import {driver} from 'webdriver-mocha'. Note that it's already enhanced with extra methods
@@ -73,7 +75,9 @@ before(async function() {
 
   // Set up browser options.
   const logPrefs = new logging.Preferences();
-  logPrefs.setLevel(logging.Type.BROWSER, logging.Level.INFO);
+  for (const logType of getEnabledLogTypes()) {
+    logPrefs.setLevel(logType, logging.Level.INFO);
+  }
 
   // Prepend node_modules/.bin to PATH, for chromedriver/geckodriver to be found.
   process.env.PATH = path.resolve("node_modules", ".bin") + ":" + process.env.PATH;
