@@ -22,8 +22,10 @@ export function setUpDebugCapture() {
 
     // Fetches logs without saving them, in effect discarding all messages so far, so that the
     // saveLogs() call in afterEach() gets only the messages created during this test case.
-    for (const logType of getEnabledLogTypes()) {
-      await driver.fetchLogs(logType);
+    if (process.env.MOCHA_WEBDRIVER_LOGDIR) {
+      for (const logType of getEnabledLogTypes()) {
+        await driver.fetchLogs(logType);
+      }
     }
   });
 
@@ -33,11 +35,12 @@ export function setUpDebugCapture() {
     if (test.state !== 'passed' && !test.pending) {
       // If test filename is available, name screenshots as "screenshot-testName-N.png"
       const testName = test.file ? path.basename(test.file, path.extname(test.file)) : "unnamed";
-      // This is a no-op if MOCHA_WEBDRIVER_LOGDIR is not set.
-      await driver.saveScreenshot(`${testName}-screenshot-{N}.png`);
-      for (const logType of getEnabledLogTypes()) {
-        const messages = await driver.fetchLogs(logType);
-        await saveLogs(messages, `${testName}-${logType}-{N}.log`);
+      if (process.env.MOCHA_WEBDRIVER_LOGDIR) {
+        await driver.saveScreenshot(`${testName}-screenshot-{N}.png`);
+        for (const logType of getEnabledLogTypes()) {
+          const messages = await driver.fetchLogs(logType);
+          await saveLogs(messages, `${testName}-${logType}-{N}.log`);
+        }
       }
     }
   });

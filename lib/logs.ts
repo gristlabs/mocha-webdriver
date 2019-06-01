@@ -1,7 +1,7 @@
 import * as fse from 'fs-extra';
 import * as path from 'path';
 
-import {WebDriver} from './index';
+import {logging, WebDriver} from './index';
 import {createNumberedFile} from './numbered-file';
 
 // Log types supported by webdriver/
@@ -11,9 +11,29 @@ export const logTypes: LogType[] = ["browser", "client", "driver", "performance"
 /**
  * This implementation is publicly available as driver.saveScreenshot().
  */
-export async function _fetchLogs(this: WebDriver, type: LogType = 'driver'): Promise<string[]> {
-  const messages = await this.manage().logs().get(type);
-  return messages.map((m) => JSON.stringify(m));
+export async function driverFetchLogs(this: WebDriver, type: LogType = 'driver'): Promise<string[]> {
+  try {
+    const messages = await this.manage().logs().get(type);
+    return messages.map((m) => entryToLine(m));
+  } catch (e) {
+    if (e.name === 'UnknownCommandError') {
+      // Firefox doesn't support logs, so we'll indicate that without failing here.
+      return [`ERROR FETCHING LOGS: ${e.message}`];
+    }
+    throw e;
+  }
+}
+
+// Convert the log entry into a more human-friendly one-liner.
+function entryToLine(entry: logging.Entry) {
+  // Produce a human-readable timestamp.
+  const timeStr = new Date(entry.timestamp).toISOString();
+
+  // Messages from Chrome have JSON stringified with newlines, making log files awkward to
+  // examine. Replace those with spaces.
+  const message = entry.message.replace(/\s+/g, ' ').trim();
+
+  return `${timeStr} ${entry.level.name} ${message}`;
 }
 
 // Parses the comma-separated MOCHA_WEBDRIVER_LOGTYPES, and returns the list of LogTypes. Defaults

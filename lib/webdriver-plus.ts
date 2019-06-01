@@ -1,7 +1,7 @@
 import {Button, By, error, until, WebDriver,
         WebElement, WebElementCondition, WebElementPromise} from 'selenium-webdriver';
 
-import {_fetchLogs, LogType} from './logs';
+import {driverFetchLogs, LogType} from './logs';
 import {driverSaveScreenshot} from './screenshots';
 
 // TODO: This is needed for the getRect() fix (see below).
@@ -244,7 +244,7 @@ Object.assign(WebDriver.prototype, {
   },
 
   saveScreenshot: driverSaveScreenshot,
-  fetchLogs: _fetchLogs,
+  fetchLogs: driverFetchLogs,
 });
 
 // Enhance WebElement to implement IWebElementPlus interface.

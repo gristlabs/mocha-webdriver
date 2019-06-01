@@ -6,7 +6,7 @@ import * as repl from 'repl';
 import {Builder, logging, WebDriver, WebElement} from 'selenium-webdriver';
 import * as chrome from 'selenium-webdriver/chrome';
 import * as firefox from 'selenium-webdriver/firefox';
-import {getEnabledLogTypes} from './logs';
+import {getEnabledLogTypes, LogType} from './logs';
 import {serializeCalls} from './serialize-calls';
 import "./webdriver-plus";
 
@@ -183,16 +183,18 @@ async function cleanup(context: IMochaContext) {
  *      addToRepl("fs", fs);     // "fs.readFile(...)" can now be used in the REPL
  *    });
  */
-export function addToRepl(name: string, value: any) {
+export function addToRepl(name: string, value: any, description: string = "no description") {
   after(function() {
     if (suiteFailed(this) && noexit) {
       replContext[name] = value;
+      replDescriptions[name] = description;
     }
   });
 }
 
 // Contains the extra items to add to the REPL.
 const replContext: {[name: string]: any} = {};
+const replDescriptions: {[name: string]: string} = {};
 
 async function startRepl(files: string[]) {
   // Wait a bit to let mocha print out its errors before REPL prints its prompts.
@@ -208,14 +210,21 @@ async function startRepl(files: string[]) {
     rerun: rerun.bind(null, files),
     // In REPL, screenshot() saves an image to './screenshot-{N}.png', or the path you provide.
     screenshot: (filePath?: string) => driver.saveScreenshot(filePath, "."),
+    showLogs,
     ...replContext,   // user-supplied items from addToRepl() calls
   };
 
   console.log("You may interact with the browser here, e.g. driver.find('.css_selector')");
-  console.log(`REPL context: ${Object.keys(customContext).join(", ")}`);
-  console.log("Failed tests; may rerun with rerun() function:");
+  console.log("Failed tests; available globals:");
+  console.log("  driver: the WebDriver object, e.g. driver.find('.css_selector')");
   for (const [i, file] of files.entries()) {
-    console.log(`  rerun(${i === 0 ? '' : i}): ${file}`);
+    console.log(`  rerun(${i === 0 ? '' : i}): Rerun tests in ${file}`);
+  }
+  console.log("  resetModule(modulePath): reload given module on next require()");
+  console.log("  screenshot(filePath?): save image to './screenshot-{N}.png' or the path provided.");
+  console.log("  showLogs(logType='browser'): show logs of an enabled type, e.g. 'browser', 'driver'");
+  for (const name of Object.keys(replDescriptions)) {
+    console.log(`  ${name}: ${replDescriptions[name]}`);
   }
 
   const replObj = repl.start({ prompt: "node> ", ignoreUndefined: true});
@@ -268,4 +277,13 @@ async function useElementDescriptions(obj: any): Promise<any> {
  */
 function resetModule(moduleName: string) {
   delete require.cache[require.resolve(moduleName)];
+}
+
+/**
+ * Fetch and print to console the logs of the given type.
+ */
+async function showLogs(logType: LogType = 'browser') {
+  for (const line of await driver.fetchLogs(logType)) {
+    console.log(line);
+  }
 }
