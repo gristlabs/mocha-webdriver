@@ -60,6 +60,7 @@ You can use this to work around an
 directory into which to save logs and screenshots automatically after any failed test case.
   - `MOCHA_WEBDRIVER_LOGTYPES`: comma-separated list of which [log types](https://seleniumhq.github.io/selenium/docs/api/javascript/module/selenium-webdriver/lib/logging_exports_Type.html)
 to enable, for `driver.fetchLogs()` and for `setUpDebugCapture()`. Defaults to `browser,driver`.
+(Note: Supported by Chrome, but not Firefox, as of June 2019.)
 
 ## Useful methods
 
