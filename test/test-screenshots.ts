@@ -15,7 +15,11 @@ describe('screenshots', function() {
 
   after(async function() {
     // Restore the original value of the env var, in case we have other tests and care about it.
-    process.env.MOCHA_WEBDRIVER_LOGDIR = origScreenshotDir;
+    if (origScreenshotDir === undefined) {
+      delete process.env.MOCHA_WEBDRIVER_LOGDIR;
+    } else {
+      process.env.MOCHA_WEBDRIVER_LOGDIR = origScreenshotDir;
+    }
 
     // Check what we are removing, just to be safe.
     if (tmpDir && tmpDir.includes("screenshots")) {
