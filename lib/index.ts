@@ -8,6 +8,7 @@ import * as chrome from 'selenium-webdriver/chrome';
 import * as firefox from 'selenium-webdriver/firefox';
 import {getEnabledLogTypes, LogType} from './logs';
 import {serializeCalls} from './serialize-calls';
+import {stackWrapDriverMethods} from './stackTraces';
 import "./webdriver-plus";
 
 chai.use(chaiAsPromised);
@@ -26,6 +27,7 @@ export * from 'selenium-webdriver';
 
 // Re-export function that sets up an afterEach() hook to save screenshots of failed tests.
 export {enableDebugCapture} from './debugging';
+export {stackWrapFunc, stackWrapOwnMethods} from './stackTraces';
 export {LogType, logTypes} from './logs';
 
 /**
@@ -134,6 +136,10 @@ before(async function() {
     if (!(count > 0)) { throw new Error("Invalid value for MOCHA_WEBDRIVER_MAX_CALLS env var"); }
     const executor = driver.getExecutor();
     executor.execute = serializeCalls(executor.execute, count);
+  }
+
+  if (process.env.MOCHA_WEBDRIVER_STACKTRACES) {
+    stackWrapDriverMethods(driver);
   }
 });
 
