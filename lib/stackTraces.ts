@@ -3,7 +3,7 @@
  * mocha for tests using async/await are often unhelpful.
  *
  * (In fact, node 12.2.0 does not seem to address some cases of lost stack traces, so this may
- * still be needed with it. The unittests tests these situations.)
+ * still be needed with it. The unittest tests these situations.)
  *
  * In node 10, any function where an error is thrown after some `await` has returned, will include
  * in the stack trace the location in that function, but not in its caller. If the function is
@@ -65,8 +65,12 @@ function wrap(fn: any): any {
 // Combine err.stack with origErr.stack, with an attempt to make it readable and helpful.
 function cleanStack(err: Error, origErr: Error): Error {
   const origLines = origErr.stack!.split('\n');
-  const origStack = origLines.slice(1)                      // Skip the fake Error's name/message
-    .filter((line) => !line.includes(`(${__filename}:`))    // Omit lines referring to this file itself
+  // Get the filename of this file (stackTraces.ts) from the first line of trace (it may differ
+  // from __filename e.g. in ".js" vs ".ts" extension).
+  const match = origLines[1] ? origLines[1].match(/\(([^:]*):\d+/) : null;
+  const filename = match ? match[1] : __filename;
+  const origStack = origLines.slice(1)                    // Skip the fake Error's name/message
+    .filter((line) => !line.includes(`(${filename}:`))    // Omit lines referring to this file itself
     .map((line) => line.replace(/^\s*at /, '$&[enhanced] '))
     .join('\n');
   if (!err.stack!.endsWith(origStack)) {
