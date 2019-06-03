@@ -67,6 +67,9 @@ function cleanStack(err: Error, origErr: Error): Error {
   const origLines = origErr.stack!.split('\n');
   // Get the filename of this file (stackTraces.ts) from the first line of trace (it may differ
   // from __filename e.g. in ".js" vs ".ts" extension).
+  // Stack trace lines look like this:
+  // >>> at thenableWebDriverProxy.find (mocha-webdriver/lib/webdriver-plus.ts:192:17)
+  // So we parse out the filename as the part between "(" and ":".
   const match = origLines[1] ? origLines[1].match(/\(([^:]*):\d+/) : null;
   const filename = match ? match[1] : __filename;
   const origStack = origLines.slice(1)                    // Skip the fake Error's name/message

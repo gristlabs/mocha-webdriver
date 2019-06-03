@@ -1,16 +1,19 @@
 import * as path from 'path';
-import {assert, driver, setUpDebugCapture, stackWrapFunc} from '../lib';
+import {assert, driver, enableDebugCapture, stackWrapFunc} from '../lib';
 import {helperFunc1, helperFunc2} from './helpers';
 
 function getThisLineNum(): number {
   const err = new Error();
   Error.captureStackTrace(err, getThisLineNum);
+  // Stack trace lines look like this:
+  // >>> at thenableWebDriverProxy.find (mocha-webdriver/lib/webdriver-plus.ts:192:17)
+  // So we parse out the line number as the number following ":".
   const matches = err.stack!.match(/:(\d+)/) || [];
   return parseInt(matches[1], 10);
 }
 
 describe('stackTraces', () => {
-  setUpDebugCapture();
+  enableDebugCapture();
 
   function createDom() {
     document.body.innerHTML = `<div id=".cls1">Hello</div>`;
