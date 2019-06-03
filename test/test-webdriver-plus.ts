@@ -1,7 +1,7 @@
 import {get as getColor} from 'color-string';
 import * as path from 'path';
 import {Key, WebElement} from 'selenium-webdriver';
-import {assert, driver} from '../lib';
+import {assert, driver, enableDebugCapture} from '../lib';
 
 function addDom(id: string, parentId?: string) {
   const parentElem = parentId ? document.getElementById(parentId) : document.body;
@@ -22,6 +22,8 @@ async function addDomDelayed(waitMs: number, id: string, parentId?: string) {
 }
 
 describe('webdriver-plus', () => {
+  enableDebugCapture();
+
   describe('find methods', function() {
     function createDom() {
       document.body.innerHTML = `
