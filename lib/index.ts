@@ -8,6 +8,7 @@ import * as chrome from 'selenium-webdriver/chrome';
 import * as firefox from 'selenium-webdriver/firefox';
 import {getEnabledLogTypes, LogType} from './logs';
 import {serializeCalls} from './serialize-calls';
+import {stackWrapDriverMethods} from './stackTraces';
 import "./webdriver-plus";
 
 chai.use(chaiAsPromised);
@@ -26,6 +27,7 @@ export * from 'selenium-webdriver';
 
 // Re-export function that sets up an afterEach() hook to save screenshots of failed tests.
 export {enableDebugCapture} from './debugging';
+export {stackWrapFunc, stackWrapOwnMethods} from './stackTraces';
 export {LogType, logTypes} from './logs';
 
 /**
@@ -78,6 +80,9 @@ before(async function() {
   for (const logType of getEnabledLogTypes()) {
     logPrefs.setLevel(logType, logging.Level.INFO);
   }
+
+  // Add stack trace enhancement (no-op if MOCHA_WEBDRIVER_STACKTRACES isn't set).
+  stackWrapDriverMethods(driver);
 
   // Prepend node_modules/.bin to PATH, for chromedriver/geckodriver to be found.
   process.env.PATH = path.resolve("node_modules", ".bin") + ":" + process.env.PATH;

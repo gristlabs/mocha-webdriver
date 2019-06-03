@@ -8,7 +8,7 @@
     "build": "tsc",
     "lint": "tslint -p .",
     "prepack": "npm run build && npm run test && npm run lint",
-    "test": "mocha 'test/**/*.{js,ts}'",
+    "test": "MOCHA_WEBDRIVER_HEADLESS=1 MOCHA_WEBDRIVER_STACKTRACES=1 mocha 'test/**/*.{js,ts}'",
     "test-debug": "mocha 'test/**/*.{js,ts}' -b --no-exit"
   },
   "files": [
