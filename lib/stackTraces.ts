@@ -52,7 +52,7 @@ function wrap(fn: any): any {
     const origErr = new Error('stackTraces');
     const ret = fn.apply(this, arguments);
     // Do nothing special if it didn't return a promise, or returned the driver itself.
-    if (typeof ret.catch !== 'function' || ret instanceof WebDriver) { return ret; }
+    if (!ret || typeof ret.catch !== 'function' || ret instanceof WebDriver) { return ret; }
     // Otherwise, tack on to the stack the stack trace from origErr, with cleaning.
     const ret2 = ret.catch((err: any) => { throw cleanStack(err, origErr); });
     // And if it's a WebElementPromise, make sure we still return one.

@@ -1,5 +1,5 @@
 import * as path from 'path';
-import {assert, driver, setUpDebugCapture} from '../lib';
+import {assert, driver, setUpDebugCapture, stackWrapFunc} from '../lib';
 import {helperFunc1, helperFunc2} from './helpers';
 
 function getThisLineNum(): number {
@@ -74,5 +74,19 @@ describe('stackTraces', () => {
       assert.match(e.stack, new RegExp(`NoSuchElementError:.*/test-stackTraces.ts:${line + 2}`, 's'),
         `Stack trace does not include expected line number ${line + 2}`);
     }
+  });
+
+  it('should not be overly expensive', async () => {
+    let sum = 0;
+    async function foo() { sum += 1; }
+    const fooWrapped = stackWrapFunc(foo);
+    const N = 10000;
+    const mark1 = Date.now();
+    for (let i = 0; i < N; i++) { await fooWrapped(); }
+    const mark2 = Date.now();
+    assert.equal(sum, N);
+    const perCallMs = (mark2 - mark1) / N;
+    assert.isAbove(perCallMs, 0);         // Ensure we are getting some actual number.
+    assert.isBelow(perCallMs, 0.1);       // Ensure it's small. (It's actually < 0.01 on a modern laptop.)
   });
 });
