@@ -363,10 +363,10 @@ NoSuchElementError: no such element: Unable to locate element: {"method":"css se
 }
 ```
 
-Note the lines with `[enhanced]` marker, which contains information about lines in your actual
+Note the lines with the `[enhanced]` marker, which contain information about lines in your actual
 test files.
 
 When your test code uses helper functions, stack traces may only report the location within the
 helper, and not the location of the helper's caller. To get both, you need to wrap the helper with
-`stackWrapFunc`. See also `test/helpers.ts` for an example of how to wrap an entire module of
+`stackWrapFunc()`. See also `test/helpers.ts` for an example of how to wrap an entire module of
 helpers.
