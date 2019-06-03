@@ -25,7 +25,7 @@ export {assert} from 'chai';
 export * from 'selenium-webdriver';
 
 // Re-export function that sets up an afterEach() hook to save screenshots of failed tests.
-export {setUpDebugCapture} from './debugging';
+export {enableDebugCapture} from './debugging';
 export {LogType, logTypes} from './logs';
 
 /**

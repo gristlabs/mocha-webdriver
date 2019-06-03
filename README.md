@@ -56,10 +56,10 @@ for other variables). Some additional environment variables are also supported:
 You can use this to work around an
 [issue](https://github.com/SeleniumHQ/selenium/issues/5611) in
 [selenium-standalone](https://github.com/vvo/selenium-standalone), causing "Connection reset" errors.
-  - `MOCHA_WEBDRIVER_LOGDIR`: in conjunction with [setUpDebugCapture](#setupdebugcapture), a
+  - `MOCHA_WEBDRIVER_LOGDIR`: in conjunction with [enableDebugCapture](#enabledebugcapture), a
 directory into which to save logs and screenshots automatically after any failed test case.
   - `MOCHA_WEBDRIVER_LOGTYPES`: comma-separated list of which [log types](https://seleniumhq.github.io/selenium/docs/api/javascript/module/selenium-webdriver/lib/logging_exports_Type.html)
-to enable, for `driver.fetchLogs()` and for `setUpDebugCapture()`. Defaults to `browser,driver`.
+to enable, for `driver.fetchLogs()` and for `enableDebugCapture()`. Defaults to `browser,driver`.
 (Note: Supported by Chrome, but not Firefox, as of June 2019.)
 
 ## Useful methods
@@ -178,7 +178,7 @@ available name. (While `relPath` may includes subdirectories, the `{N}` token
 may only be used in the filename part.)
  - `dir` may specify a different destination directory. If empty, the screenshot will be skipped.
 
-### setUpDebugCapture()
+### enableDebugCapture()
 
 If called in a mocha test suite (i.e. inside `describe()`), adds an `afterEach` hook to save logs
 and a screenshot after any failed test, only if `MOCHA_WEBDRIVER_LOGDIR` variable is set. The

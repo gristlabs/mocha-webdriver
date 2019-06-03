@@ -14,10 +14,10 @@ import {getEnabledLogTypes, saveLogs} from './logs';
  * This should be called at suite level, not at root level (as this hook is only suitable for some
  * kinds of mocha tests, namely those using webdriver).
  */
-export function setUpDebugCapture() {
+export function enableDebugCapture() {
   beforeEach(async function() {
     if (this.runnable().parent!.root) {
-      throw new Error("setupSnapshots() should be called at suite level, not at root level");
+      throw new Error("enableDebugCapture() should be called at suite level, not at root level");
     }
 
     // Fetches logs without saving them, in effect discarding all messages so far, so that the
