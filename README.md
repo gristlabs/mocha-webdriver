@@ -75,7 +75,7 @@ If the `mapper` argument is given, it is a function applied to all the found ele
 findAll() returns the results of this function. E.g. `findAll('a', (el) =>
 el.getAttribute('href'))`.
 
-### driverOrElement.findWait(timeoutSec, selector, [message])
+### driverOrElement.findWait(selector, timeoutMSec, [message])
 
 Shorthand to wait for an element matching the given selector to be present. Also available on a
 WebElement.
@@ -92,7 +92,7 @@ driver.findContent("button", /Accept/);
 Note that for performance reasons, it only queries the browser once and searches using Javascript
 in browser.
 
-### driverOrElement.findContentWait(timeoutSec, selector, contentRegExp, [message])
+### driverOrElement.findContentWait(selector, contentRegExp, timeoutMSec, [message])
 
 Shorthand to wait for an element containing specific innerText matching the given regex to be present.
 Also available on a WebElement.
