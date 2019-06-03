@@ -18,31 +18,34 @@
 import {WebDriver, WebElement, WebElementPromise} from './index';
 
 /**
- * Wrap any function to report better stack traces.
- * In errors thrown from the returned function, the part of stack leading up to its calls will
- * be prefixed with [[from {func.name}]].
+ * Wrap any function to report better stack traces, only if MOCHA_WEBDRIVER_STACKTRACES is set.
+ * In errors thrown from the returned function, stack leading up the its call will be included
+ * with lines starting with "at [enhanced] ...".
  */
 export function stackWrapFunc<T extends any[], R>(fn: (...args: T) => R): (...args: T) => R {
+  if (!process.env.MOCHA_WEBDRIVER_STACKTRACES) { return fn; }
   return wrap(fn);
 }
 
 /**
- * Wrap all methods in the given object, in-place. E.g. this gets applied to WebDriver.prototype.
- * In errors thrown from these methods, the part of stack leading up to their calls will be
- * prefixed with [[from {objName}.{methodName}]].
+ * Wrap all methods in the given object (in-place), to report better stack traces, only if
+ * MOCHA_WEBDRIVER_STACKTRACES is set. E.g. this gets applied to WebDriver.prototype.
+ * In errors thrown from these methods, stack leading up the their calls will be included with
+ * lines starting "at [enhanced] ...".
  */
-export function stackWrapOwnMethods<T>(_obj: T, objName: string): T {
+export function stackWrapOwnMethods<T>(_obj: T): T {
+  if (!process.env.MOCHA_WEBDRIVER_STACKTRACES) { return _obj; }
   const obj = _obj as any;
   for (const m of Object.getOwnPropertyNames(obj)) {
     if (typeof obj[m] === 'function' && !m.endsWith('_') && !m.startsWith('_')) {
-      obj[m] = wrap(obj[m].origFunc || obj[m], objName);
+      obj[m] = wrap(obj[m].origFunc || obj[m]);
     }
   }
   return obj;
 }
 
 // Wrap a single function.
-function wrap(fn: any, objName?: string): any {
+function wrap(fn: any): any {
   const wrapped = function(this: any) {
     // This object has a useful stack trace. If we catch an error after some async operation,
     // we'll append this useful stack trace to it.
@@ -51,7 +54,7 @@ function wrap(fn: any, objName?: string): any {
     // Do nothing special if it didn't return a promise, or returned the driver itself.
     if (typeof ret.catch !== 'function' || ret instanceof WebDriver) { return ret; }
     // Otherwise, tack on to the stack the stack trace from origErr, with cleaning.
-    const ret2 = ret.catch((err: any) => { throw cleanStack(err, origErr, fn.name, objName); });
+    const ret2 = ret.catch((err: any) => { throw cleanStack(err, origErr); });
     // And if it's a WebElementPromise, make sure we still return one.
     return (ret instanceof WebElementPromise) ? new WebElementPromise(ret.getDriver(), ret2) : ret2;
   };
@@ -60,21 +63,21 @@ function wrap(fn: any, objName?: string): any {
 }
 
 // Combine err.stack with origErr.stack, with an attempt to make it readable and helpful.
-function cleanStack(err: Error, origErr: Error, fnName: string, objName?: string): Error {
+function cleanStack(err: Error, origErr: Error): Error {
   const origLines = origErr.stack!.split('\n');
   const origStack = origLines.slice(1)                      // Skip the fake Error's name/message
     .filter((line) => !line.includes(`(${__filename}:`))    // Omit lines referring to this file itself
+    .map((line) => line.replace(/^\s*at /, '$&[enhanced] '))
     .join('\n');
   if (!err.stack!.endsWith(origStack)) {
-    const name = (objName ? objName + '.' : '') + fnName;
-    err.stack += `\n   [[from ${name}]]\n` + origStack;
+    err.stack += '\n' + origStack;
   }
   return err;
 }
 
 // This is called automatically when driver is created.
 export function stackWrapDriverMethods(_driver: WebDriver) {
-  stackWrapOwnMethods(WebDriver.prototype, 'WebDriver');
-  stackWrapOwnMethods(WebElement.prototype, 'WebElement');
-  stackWrapOwnMethods(WebElementPromise.prototype, 'WebElementPromise');
+  stackWrapOwnMethods(WebDriver.prototype);
+  stackWrapOwnMethods(WebElement.prototype);
+  stackWrapOwnMethods(WebElementPromise.prototype);
 }

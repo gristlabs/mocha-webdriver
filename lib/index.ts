@@ -81,6 +81,9 @@ before(async function() {
     logPrefs.setLevel(logType, logging.Level.INFO);
   }
 
+  // Add stack trace enhancement (no-op if MOCHA_WEBDRIVER_STACKTRACES isn't set).
+  stackWrapDriverMethods(driver);
+
   // Prepend node_modules/.bin to PATH, for chromedriver/geckodriver to be found.
   process.env.PATH = path.resolve("node_modules", ".bin") + ":" + process.env.PATH;
 
@@ -136,10 +139,6 @@ before(async function() {
     if (!(count > 0)) { throw new Error("Invalid value for MOCHA_WEBDRIVER_MAX_CALLS env var"); }
     const executor = driver.getExecutor();
     executor.execute = serializeCalls(executor.execute, count);
-  }
-
-  if (process.env.MOCHA_WEBDRIVER_STACKTRACES) {
-    stackWrapDriverMethods(driver);
   }
 });
 

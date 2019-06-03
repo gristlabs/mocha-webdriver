@@ -19,5 +19,5 @@ namespace helper {
   }
 }
 
-stackWrapOwnMethods(helper, 'helpers');
+stackWrapOwnMethods(helper);
 export = helper;
