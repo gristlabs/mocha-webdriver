@@ -47,7 +47,6 @@ function wrap(fn: any, objName?: string): any {
     // This object has a useful stack trace. If we catch an error after some async operation,
     // we'll append this useful stack trace to it.
     const origErr = new Error('stackTraces');
-    // console.log("In", fn.name, origErr.stack);
     const ret = fn.apply(this, arguments);
     // Do nothing special if it didn't return a promise, or returned the driver itself.
     if (typeof ret.catch !== 'function' || ret instanceof WebDriver) { return ret; }
@@ -63,7 +62,9 @@ function wrap(fn: any, objName?: string): any {
 // Combine err.stack with origErr.stack, with an attempt to make it readable and helpful.
 function cleanStack(err: Error, origErr: Error, fnName: string, objName?: string): Error {
   const origLines = origErr.stack!.split('\n');
-  const origStack = origLines.slice(2).join('\n');
+  const origStack = origLines.slice(1)                      // Skip the fake Error's name/message
+    .filter((line) => !line.includes(`(${__filename}:`))    // Omit lines referring to this file itself
+    .join('\n');
   if (!err.stack!.endsWith(origStack)) {
     const name = (objName ? objName + '.' : '') + fnName;
     err.stack += `\n   [[from ${name}]]\n` + origStack;
