@@ -19,7 +19,7 @@ export interface IFindInterface {
   /**
    * Shorthand to wait for an element to be present, using a css selector.
    */
-  findWait(timeoutSec: number, selector: string, message?: string): WebElementPromise;
+  findWait(selector: string, timeoutMSec: number, message?: string): WebElementPromise;
 
   /**
    * Shorthand to find all elements matching a css selector.
@@ -40,7 +40,7 @@ export interface IFindInterface {
   /**
    * Shorthand to wait for an element containing specific innerText matching the given regex to be present.
    */
-  findContentWait(timeoutSec: number, selector: string, contentRE: RegExp, message?: string): WebElementPromise;
+  findContentWait(selector: string, contentRE: RegExp, timeoutMSec: number, message?: string): WebElementPromise;
 }
 
 declare module "selenium-webdriver" {
@@ -194,8 +194,8 @@ Object.assign(WebDriver.prototype, {
     return mapper ? Promise.all(elems.map(mapper)) : elems;
   },
 
-  findWait(this: WebDriver, timeoutSec: number, selector: string, message?: string): WebElementPromise {
-    return this.wait(until.elementLocated(By.css(selector)), timeoutSec * 1000, message);
+  findWait(this: WebDriver, selector: string, timeoutMSec: number, message?: string): WebElementPromise {
+    return this.wait(until.elementLocated(By.css(selector)), timeoutMSec, message);
   },
 
   findContent(this: WebDriver, selector: string, contentRE: RegExp): WebElementPromise {
@@ -204,14 +204,14 @@ Object.assign(WebDriver.prototype, {
 
   findContentWait(
     this: WebDriver,
-    timeoutSec: number,
     selector: string,
     contentRE: RegExp,
+    timeoutMSec: number,
     message?: string
   ): WebElementPromise {
     const condition = makeWebElementCondition(`for element matching ${selector} and ${contentRE}`,
       () => findContentIfPresent(this, null, selector, contentRE));
-    return this.wait(condition, timeoutSec * 1000, message);
+    return this.wait(condition, timeoutMSec, message);
   },
 
   mouseDown(this: WebDriver, button = Button.LEFT): Promise<void> {
@@ -254,10 +254,10 @@ Object.assign(WebElement.prototype, {
     return mapper ? Promise.all(elems.map(mapper)) : elems;
   },
 
-  findWait(this: WebElement, timeoutSec: number, selector: string, message?: string): WebElementPromise {
+  findWait(this: WebElement, selector: string, timeoutMSec: number, message?: string): WebElementPromise {
     const condition = makeWebElementCondition(`for element matching ${selector}`,
       () => this.findElements(By.css(selector)).then((e) => e[0]));
-    return this.getDriver().wait(condition, timeoutSec * 1000, message);
+    return this.getDriver().wait(condition, timeoutMSec, message);
   },
 
   findContent(this: WebElement, selector: string, contentRE: RegExp): WebElementPromise {
@@ -266,14 +266,14 @@ Object.assign(WebElement.prototype, {
 
   findContentWait(
     this: WebElement,
-    timeoutSec: number,
     selector: string,
     contentRE: RegExp,
+    timeoutMSec: number,
     message?: string
   ): WebElementPromise {
     const condition = makeWebElementCondition(`for element matching ${selector} and ${contentRE}`,
       () => findContentIfPresent(this.getDriver(), this, selector, contentRE));
-    return this.getDriver().wait(condition, timeoutSec * 1000, message);
+    return this.getDriver().wait(condition, timeoutMSec, message);
   },
 
   findClosest(this: WebElement, selector: string): WebElementPromise {
