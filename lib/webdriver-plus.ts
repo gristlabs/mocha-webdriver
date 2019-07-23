@@ -36,12 +36,12 @@ export interface IFindInterface {
   /**
    * Find elements by a css selector, and filter by innerText matching the given regex.
    */
-  findContent(selector: string, contentRE: RegExp): WebElementPromise;
+  findContent(selector: string, contentRE: RegExp|string): WebElementPromise;
 
   /**
    * Shorthand to wait for an element containing specific innerText matching the given regex to be present.
    */
-  findContentWait(selector: string, contentRE: RegExp, timeoutMSec: number, message?: string): WebElementPromise;
+  findContentWait(selector: string, contentRE: RegExp|string, timeoutMSec: number, message?: string): WebElementPromise;
 }
 
 declare module "selenium-webdriver" {
@@ -154,7 +154,7 @@ function makeWebElementCondition(message: string, fn: (webdriver: WebDriver) => 
 }
 
 async function findContentHelper(driver: WebDriver, finder: WebElement|null,
-                                 selector: string, contentRE: RegExp): Promise<WebElement> {
+                                 selector: string, contentRE: RegExp|string): Promise<WebElement> {
   const elem = await findContentIfPresent(driver, finder, selector, contentRE);
   if (!elem) {
     throw new error.NoSuchElementError(`No elements match ${selector} and ${contentRE}`);
@@ -163,7 +163,14 @@ async function findContentHelper(driver: WebDriver, finder: WebElement|null,
 }
 
 async function findContentIfPresent(driver: WebDriver, finder: WebElement|null,
-                                    selector: string, contentRE: RegExp): Promise<WebElement|null> {
+                                    selector: string, content: RegExp|string): Promise<WebElement|null> {
+
+  // credit for the regexp escape:
+  // https://makandracards.com/makandra/15879-javascript-how-to-generate-a-regular-expression-from-a-string
+  const contentRE = content instanceof RegExp ?
+    content :
+    new RegExp(content.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&'));
+
   // tslint:disable:no-shadowed-variable
   return await driver.executeScript<WebElement>(() => {
     const finder = (arguments[0] || window.document);
@@ -205,14 +212,14 @@ Object.assign(WebDriver.prototype, {
     return this.wait(until.elementLocated(By.css(selector)), timeoutMSec, message);
   },
 
-  findContent(this: WebDriver, selector: string, contentRE: RegExp): WebElementPromise {
+  findContent(this: WebDriver, selector: string, contentRE: RegExp|string): WebElementPromise {
     return new WebElementPromise(this, findContentHelper(this, null, selector, contentRE));
   },
 
   findContentWait(
     this: WebDriver,
     selector: string,
-    contentRE: RegExp,
+    contentRE: RegExp|string,
     timeoutMSec: number,
     message?: string
   ): WebElementPromise {
@@ -268,14 +275,14 @@ Object.assign(WebElement.prototype, {
     return this.getDriver().wait(condition, timeoutMSec, message);
   },
 
-  findContent(this: WebElement, selector: string, contentRE: RegExp): WebElementPromise {
+  findContent(this: WebElement, selector: string, contentRE: RegExp|string): WebElementPromise {
     return new WebElementPromise(this.getDriver(), findContentHelper(this.getDriver(), this, selector, contentRE));
   },
 
   findContentWait(
     this: WebElement,
     selector: string,
-    contentRE: RegExp,
+    contentRE: RegExp|string,
     timeoutMSec: number,
     message?: string
   ): WebElementPromise {
