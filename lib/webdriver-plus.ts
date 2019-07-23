@@ -168,9 +168,9 @@ async function findContentIfPresent(driver: WebDriver, finder: WebElement|null,
   return await driver.executeScript<WebElement>(() => {
     const finder = (arguments[0] || window.document);
     const elements = [...finder.querySelectorAll(arguments[1])];
-    const contentRE = new RegExp(arguments[2]);
+    const contentRE = new RegExp(arguments[2].source, arguments[2].flags);
     return elements.find((el) => contentRE.test(el.innerText));
-  }, finder, selector, contentRE.source);
+  }, finder, selector, {source: contentRE.source, flags: contentRE.flags});
 }
 
 async function findClosestHelper(driver: WebDriver, finder: WebElement, selector: string): Promise<WebElement> {
