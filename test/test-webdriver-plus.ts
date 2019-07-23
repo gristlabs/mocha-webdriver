@@ -120,6 +120,11 @@ describe('webdriver-plus', () => {
       assert.equal(await driver.findContent('.cls1', /k$/i).getText(), 'OK');
     });
 
+    it('should support matching string with driver.findContent()', async function() {
+      assert.equal(await driver.findContent('.cls1', 'OK').getText(), 'OK');
+      assert.equal(await driver.findContent('.cls1', '!').getText(), 'World!');
+    });
+
     it('should find the closest matching ancestor with element.findClosest()', async function() {
       const child = await driver.find(".cls2");
       await assert.match(await child.findClosest('#id1').getText(), /Hello/);
