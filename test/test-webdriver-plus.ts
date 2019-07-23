@@ -115,6 +115,11 @@ describe('webdriver-plus', () => {
       assert.equal(elemText, 'Foo');
     });
 
+    it('should support flags in regex', async function() {
+      assert.equal(await driver.findContent('.cls1', /b/i).getText(), 'Bye');
+      assert.equal(await driver.findContent('.cls1', /k$/i).getText(), 'OK');
+    });
+
     it('should find the closest matching ancestor with element.findClosest()', async function() {
       const child = await driver.find(".cls2");
       await assert.match(await child.findClosest('#id1').getText(), /Hello/);
@@ -136,7 +141,7 @@ describe('webdriver-plus', () => {
   describe('WebElement', function() {
     function createDom() {
       document.body.innerHTML = `
-        <style>#btn:hover { background-color: pink; color: green; }</style>
+        <style>#btn { color: black; } #btn:hover { background-color: pink; color: green; }</style>
         <div id="id1" class="cls0 test0">
           <input id="inp" type="text">
           <button id="btn">Hello</button>
