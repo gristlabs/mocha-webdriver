@@ -1,6 +1,6 @@
 {
   "name": "mocha-webdriver",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Write Mocha style tests using selenium-webdriver, with many conveniences.",
   "main": "dist/index",
   "typings": "dist/index",
