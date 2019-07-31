@@ -88,7 +88,7 @@ WebElement.
 ### driverOrElement.findContent(selector, contentRegExp)
 
 Find elements matching the given css selector, then return the first one whose innerText matches
-the given regular expression. Also available on a WebElement. E.g.
+the given pattern. Accepts both regular expression pattern or plain text pattern. Also available on a WebElement. E.g.
 
 ```typescript
 driver.findContent("button", /Accept/);
@@ -99,7 +99,7 @@ in browser.
 
 ### driverOrElement.findContentWait(selector, contentRegExp, timeoutMSec, [message])
 
-Shorthand to wait for an element containing specific innerText matching the given regex to be present.
+Shorthand to wait for an element containing specific innerText matching the given pattern. Accepts both regular expression pattern or plain text pattern.
 Also available on a WebElement.
 
 ### elem.findClosest(selector)
