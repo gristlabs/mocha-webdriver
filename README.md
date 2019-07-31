@@ -63,6 +63,7 @@ to enable, for `driver.fetchLogs()` and for `enableDebugCapture()`. Defaults to 
 (Note: Supported by Chrome, but not Firefox, as of June 2019.)
   - `MOCHA_WEBDRIVER_STACKTRACES`: Enhance stack traces with async frames, if set to a non-empty
 value.
+  - `MOCHA_WEBDRIVER_IGNORE_CHROME_VERSION`: Disable chromedriver's check that it supports the installed version of Chrome. Normally the installed chromedriver (controlled by the version in `yarn.lock`) must [match Chrome's version](https://chromedriver.chromium.org/downloads/version-selection). When tests are run by different developers and test environments, that can cause difficulties. On the other hand, incompatible behavior is rare, so this option offers a practical workaround.
 
 ## Useful methods
 

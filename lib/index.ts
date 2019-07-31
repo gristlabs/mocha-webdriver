@@ -50,6 +50,13 @@ export interface IMochaContext {
   timeout(ms: number): void;
 }
 
+// Add a missing declaration in selenium-webdriver typings.
+declare module "selenium-webdriver" {
+  interface Builder {   // tslint:disable-line:interface-name
+    setChromeService(service: any): Builder;
+  }
+}
+
 // Maps server objects to their "ready" promise.
 const _servers: Map<IMochaServer, Promise<void>> = new Map();
 
@@ -122,10 +129,18 @@ before(async function() {
     firefoxOpts.addArguments(...args);
   }
 
+  // Recent chromedriver refuses to work with any chrome major versions other than its own. That
+  // makes it very awkward for developers and tests who are not all using the same chrome version.
+  // Almost always (so far) the versions are actually compatible. Enable an undocumented option to
+  // skip chromedriver's version check by setting MOCHA_WEBDRIVER_IGNORE_CHROME_VERSION.
+  const chromeService = process.env.MOCHA_WEBDRIVER_IGNORE_CHROME_VERSION ?
+    new chrome.ServiceBuilder().addArguments("--disable-build-check") : null;
+
   driver = new Builder()
     .forBrowser('firefox')
     .setLoggingPrefs(logPrefs)
     .setChromeOptions(chromeOpts)
+    .setChromeService(chromeService)
     .setFirefoxOptions(firefoxOpts)
     .build();
   // If driver fails to start, this will let us notice and abort quickly.
