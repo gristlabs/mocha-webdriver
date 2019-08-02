@@ -168,11 +168,13 @@ async function findContentIfPresent(driver: WebDriver, finder: WebElement|null,
   // credit for the regexp escape:
   // https://makandracards.com/makandra/15879-javascript-how-to-generate-a-regular-expression-from-a-string
 
-  // WARN: Desciminating with `content instanceof RegExp ? ... : ... ;` was causing issues when
+  // WARN: Discriminating with `content instanceof RegExp ? ... : ... ;` was causing issues when
   // called from the repl (for instance `node > driver.findContent('.foo', /BAR/)` was
   // failing). It's as if repl uses its own instance of the RegExp class, making content not an
   // instance of the RegExp in this context. It's something to keep in mind when implementating
   // function that accepts built in objects (Date, URL, ...).
+  // tslint:disable-next-line:max-line-length
+  // Useful link: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/instanceof#instanceof_and_multiple_context_(e.g._frames_or_windows)
   const contentRE = typeof content === 'string' ?
     new RegExp(content.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')) :
     content;
