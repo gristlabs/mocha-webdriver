@@ -83,7 +83,7 @@ function cleanStack(err: Error, origErr: Error): Error {
 }
 
 // This is called automatically when driver is created.
-export function stackWrapDriverMethods(_driver: WebDriver) {
+export function stackWrapDriverMethods() {
   stackWrapOwnMethods(WebDriver.prototype);
   stackWrapOwnMethods(WebElement.prototype);
   stackWrapOwnMethods(WebElementPromise.prototype);
