@@ -80,7 +80,8 @@ const noexit: boolean = process.argv.includes("--no-exit") || process.argv.inclu
 
 /**
  * Create a driver, with all command-line options applied.  Extra options can be passed
- * in as a parameter.
+ * in as a parameter.  For example, {extraArgs: ['user-agent=notscape']} would set the
+ * user agent in chrome.
  */
 export async function createDriver(options: {extraArgs?: string[]} = {}): Promise<WebDriver> {
   // Set up browser options.
