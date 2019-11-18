@@ -9,7 +9,7 @@ export type LogType = "browser"|"client"|"driver"|"performance"|"server";
 export const logTypes: LogType[] = ["browser", "client", "driver", "performance", "server"];
 
 /**
- * This implementation is publicly available as driver.saveScreenshot().
+ * This implementation is publicly available as driver.fetchLogs().
  */
 export async function driverFetchLogs(this: WebDriver, type: LogType = 'driver'): Promise<string[]> {
   try {
