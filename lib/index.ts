@@ -78,21 +78,17 @@ export function useServer(server: IMochaServer) {
 // mocha, and we use it too to start up a REPL when this option is used.
 const noexit: boolean = process.argv.includes("--no-exit") || process.argv.includes('-E');
 
-// Start up the webdriver and serve files that its browser will see.
-before(async function() {
-  this.timeout(20000);      // Set a longer default timeout.
-
+/**
+ * Create a driver, with all command-line options applied.  Extra options can be passed
+ * in as a parameter.  For example, {extraArgs: ['user-agent=notscape']} would set the
+ * user agent in chrome.
+ */
+export async function createDriver(options: {extraArgs?: string[]} = {}): Promise<WebDriver> {
   // Set up browser options.
   const logPrefs = new logging.Preferences();
   for (const logType of getEnabledLogTypes()) {
     logPrefs.setLevel(logType, logging.Level.INFO);
   }
-
-  // Add stack trace enhancement (no-op if MOCHA_WEBDRIVER_STACKTRACES isn't set).
-  stackWrapDriverMethods(driver);
-
-  // Prepend node_modules/.bin to PATH, for chromedriver/geckodriver to be found.
-  process.env.PATH = npmRunPath({cwd: __dirname});
 
   const chromeOpts = new chrome.Options();
   // Typings for Firefox options are incomplete, so supplement them with Chrome's typings.
@@ -123,6 +119,10 @@ before(async function() {
     firefoxOpts.addArguments("-width", widthStr, "-height", heightStr);
   }
 
+  if (options.extraArgs) {
+    chromeOpts.addArguments(...options.extraArgs);
+    firefoxOpts.addArguments(...options.extraArgs);
+  }
   if (process.env.MOCHA_WEBDRIVER_ARGS) {
     const args = process.env.MOCHA_WEBDRIVER_ARGS.trim().split(/\s+/);
     chromeOpts.addArguments(...args);
@@ -136,7 +136,7 @@ before(async function() {
   const chromeService = process.env.MOCHA_WEBDRIVER_IGNORE_CHROME_VERSION ?
     new chrome.ServiceBuilder().addArguments("--disable-build-check") : null;
 
-  driver = new Builder()
+  const newDriver = new Builder()
     .forBrowser('firefox')
     .setLoggingPrefs(logPrefs)
     .setChromeOptions(chromeOpts)
@@ -144,7 +144,7 @@ before(async function() {
     .setFirefoxOptions(firefoxOpts)
     .build();
   // If driver fails to start, this will let us notice and abort quickly.
-  await driver.getSession();
+  await newDriver.getSession();
 
   // If requested, limit the max number of parallel in-flight selenium calls. This is needed for
   // selenium-standalone, which can't cope with more than a few calls. A limit like 5 works fine.
@@ -152,9 +152,23 @@ before(async function() {
   if (process.env.MOCHA_WEBDRIVER_MAX_CALLS) {
     const count = parseInt(process.env.MOCHA_WEBDRIVER_MAX_CALLS, 10);
     if (!(count > 0)) { throw new Error("Invalid value for MOCHA_WEBDRIVER_MAX_CALLS env var"); }
-    const executor = driver.getExecutor();
+    const executor = newDriver.getExecutor();
     executor.execute = serializeCalls(executor.execute, count);
   }
+  return newDriver;
+}
+
+// Start up the webdriver and serve files that its browser will see.
+before(async function() {
+  this.timeout(20000);      // Set a longer default timeout.
+
+  // Add stack trace enhancement (no-op if MOCHA_WEBDRIVER_STACKTRACES isn't set).
+  stackWrapDriverMethods();
+
+  // Prepend node_modules/.bin to PATH, for chromedriver/geckodriver to be found.
+  process.env.PATH = npmRunPath({cwd: __dirname});
+
+  driver = await createDriver();
 });
 
 // Helper to return whether the given suite had any failures.
@@ -167,6 +181,7 @@ function suiteFailed(ctx: Mocha.Context): boolean {
 
 // Quit the webdriver and stop serving files, unless we failed and --no-exit is given.
 after(async function() {
+  this.timeout(6000);
   const testParent = this.test!.parent!;
   if (suiteFailed(this) && noexit) {
     const files = new Set<string>();
