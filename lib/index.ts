@@ -94,6 +94,13 @@ export async function createDriver(options: {extraArgs?: string[]} = {}): Promis
   // Typings for Firefox options are incomplete, so supplement them with Chrome's typings.
   const firefoxOpts = new firefox.Options() as firefox.Options & chrome.Options;
 
+  // Optionally suppress the "Chrome is being controlled by automated test software" banner.
+  // At the time of writing, on page reloads this can result on early clicks being missed,
+  // so it can be helpful to just suppress it entirely.
+  if (process.env.MOCHA_WEBDRIVER_NO_CONTROL_BANNER) {
+    chromeOpts.excludeSwitches("enable-automation");
+  }
+
   // Pay attention to the environment variables (documented in README).
   if (process.env.MOCHA_WEBDRIVER_HEADLESS) {
     chromeOpts.headless();
