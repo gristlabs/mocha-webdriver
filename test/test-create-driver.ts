@@ -1,5 +1,5 @@
 import * as path from 'path';
-import {assert, createDriver, enableDebugCapture} from '../lib';
+import {assert, createDriver, enableDebugCapture, setOptionsModifyFunc} from '../lib';
 
 describe('createDriver', () => {
   enableDebugCapture();
@@ -38,5 +38,28 @@ describe('createDriver', () => {
     } finally {
       await driver.quit();
     }
+  });
+
+  describe('setOptionsModifyFunc', function() {
+    this.timeout(20000);
+
+    after(async function() {
+      setOptionsModifyFunc(null);
+    });
+
+    it('should support customizing driver options', async function() {
+      setOptionsModifyFunc(({chromeOpts, firefoxOpts}) => {
+        chromeOpts.addArguments('--user-agent=Bond007');
+        // Typings in selenium-webdriver are wrong at the moment.
+        (firefoxOpts as any).setPreference('general.useragent.override', "Bond007");
+      });
+      const driver = await createDriver();
+      try {
+        await driver.get('file://' + path.resolve(__dirname, 'blank.html'));
+        assert.equal(await driver.executeScript('return navigator.userAgent'), "Bond007");
+      } finally {
+        await driver.quit();
+      }
+    });
   });
 });
