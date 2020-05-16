@@ -217,7 +217,7 @@ setOptionsModifyFunc(({chromeOpts, firefoxOpts}) => {
 For available methods, see
 [Chrome Options](https://www.selenium.dev/selenium/docs/api/javascript/module/selenium-webdriver/chrome_exports_Options.html)
 and [Firefox Options](https://www.selenium.dev/selenium/docs/api/javascript/module/selenium-webdriver/firefox_exports_Options.html).
-For available preferences, see [Chrome Prefs](https://chromium.googlesource.com/chromium/src/+/master/chrome/common/pref_names.cc) and <about:config> for Firefox.
+For available preferences, see [Chrome Prefs](https://chromium.googlesource.com/chromium/src/+/master/chrome/common/pref_names.cc) and `about:config` for Firefox.
 
 ### driver.mouseMoveBy({x?, y?})
 
