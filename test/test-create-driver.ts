@@ -9,7 +9,7 @@ describe('createDriver', () => {
   }
 
   it('can create multiple drivers', async function() {
-    this.timeout(20000);
+    this.timeout(30000);
     const driver1 = await createDriver();
     const driver2 = await createDriver();
     try {
