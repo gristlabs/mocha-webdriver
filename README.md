@@ -219,12 +219,6 @@ For available methods, see
 and [Firefox Options](https://www.selenium.dev/selenium/docs/api/javascript/module/selenium-webdriver/firefox_exports_Options.html).
 For available preferences, see [Chrome Prefs](https://chromium.googlesource.com/chromium/src/+/master/chrome/common/pref_names.cc) and `about:config` for Firefox.
 
-### driver.mouseMoveBy({x?, y?})
-
-: pass the given args to the browser (e.g. `--disable-gpu --foo=bar`)
-above
-export async function createDriver(options: {extraArgs?: string[]} = {}): Promise<WebDriver> {
-
 ## Serving content
 
 As with any webdriver tests, your test is just telling a browser what to do. It's up to you to
