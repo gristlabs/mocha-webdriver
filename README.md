@@ -194,6 +194,30 @@ where `name` is the basename of the test file, and `N` is a numeric suffix.
 This is helpful for debugging failing tests. Screenshots are particularly helpful in headless mode.
 See also [#Logging](#logging).
 
+## Customizing WebDriver creation
+
+Sometimes you need to set options, such as browser preferences, on webdriver creation.
+Some can be changed via environment variables such as `MOCHA_WEBDRIVER_ARGS` (see above). For
+others, you can use `setOptionsModifyFunc()`.
+
+### setOptionsModifyFunc(modifyFunc: ({chromeOpts, firefoxOpts}) => void)
+
+Call this before mocha's `before()` hook, and modify `chromeOpts` and/or `firefoxOpts` to
+your needs. For example:
+
+```
+setOptionsModifyFunc(({chromeOpts, firefoxOpts}) => {
+  chromeOpts.setUserPreferences({
+    download: { default_directory: '/tmp' }
+  });
+  firefoxOpts.setPreference('browser.download.dir', '/tmp');
+});
+```
+
+For available methods, see
+[Chrome Options](https://www.selenium.dev/selenium/docs/api/javascript/module/selenium-webdriver/chrome_exports_Options.html)
+and [Firefox Options](https://www.selenium.dev/selenium/docs/api/javascript/module/selenium-webdriver/firefox_exports_Options.html).
+For available preferences, see [Chrome Prefs](https://chromium.googlesource.com/chromium/src/+/master/chrome/common/pref_names.cc) and `about:config` for Firefox.
 
 ## Serving content
 
