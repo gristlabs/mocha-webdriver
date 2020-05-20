@@ -1,7 +1,9 @@
 extension:
   - 'js'
   - 'ts'
-require: 'ts-node/register'
+require:
+  - 'ts-node/register'
+  - './test/init-mocha-webdriver'
 watch-files:
   - 'lib/**/*.{js,ts}'
   - 'test/**/*.{js,ts}'
