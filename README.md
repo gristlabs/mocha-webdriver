@@ -1,5 +1,6 @@
 # mocha-webdriver
 
+[![Build Status](https://api.travis-ci.org/gristlabs/mocha-webdriver.svg?branch=master)](https://api.travis-ci.org/gristlabs/mocha-webdriver)
 [![npm version](https://badge.fury.io/js/mocha-webdriver.svg)](https://badge.fury.io/js/mocha-webdriver)
 
 > Write Mocha style tests using selenium-webdriver, with many conveniences.
