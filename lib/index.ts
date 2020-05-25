@@ -47,7 +47,12 @@ export function setOptionsModifyFunc(modifyFunc: OptionsModifyFunc | null) {
   optionsModifyFunc = modifyFunc;
 }
 
-export type OptionsModifyFunc = (opts: {chromeOpts: chrome.Options, firefoxOpts: firefox.Options}) => void;
+export interface IDriverOptions {
+  capabilities: {[key: string]: string};
+  chromeOpts: chrome.Options;
+  firefoxOpts: firefox.Options;
+}
+export type OptionsModifyFunc = (opts: IDriverOptions) => void;
 let optionsModifyFunc: OptionsModifyFunc|null = null;
 
 /**
@@ -150,8 +155,9 @@ export async function createDriver(options: {extraArgs?: string[]} = {}): Promis
     firefoxOpts.addArguments(...args);
   }
 
+  const capabilities = {};
   if (optionsModifyFunc) {
-    optionsModifyFunc({chromeOpts, firefoxOpts});
+    optionsModifyFunc({chromeOpts, firefoxOpts, capabilities});
   }
 
   // Recent chromedriver refuses to work with any chrome major versions other than its own. That
@@ -162,6 +168,7 @@ export async function createDriver(options: {extraArgs?: string[]} = {}): Promis
     new chrome.ServiceBuilder().addArguments("--disable-build-check") : null;
 
   const newDriver = new Builder()
+    .withCapabilities(capabilities)
     .forBrowser('firefox')
     .setLoggingPrefs(logPrefs)
     .setChromeOptions(chromeOpts)
