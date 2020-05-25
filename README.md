@@ -402,4 +402,4 @@ helpers.
 
 Browser testing platform for `mocha-webdriver` provided by [Sauce Labs](https://saucelabs.com/).
 
-![Testing Powered By SauceLabs](https://raw.githubusercontent.com/saucelabs/opensource/master/assets/powered-by-saucelabs-badge-red.png "Testing Powered By SauceLabs")
+[![Testing Powered By SauceLabs](https://raw.githubusercontent.com/saucelabs/opensource/master/assets/powered-by-saucelabs-badge-red.png "Testing Powered By SauceLabs")](https://saucelabs.com)
