@@ -11,7 +11,8 @@ function getThisLineNum(): number {
   return parseInt(matches[1], 10);
 }
 
-describe('stackTraces', () => {
+describe('stackTraces', function() {
+  this.timeout(20000);
   enableDebugCapture();
 
   function createDom() {
@@ -19,7 +20,6 @@ describe('stackTraces', () => {
   }
 
   before(async function() {
-    this.timeout(20000);
     await driver.get('about:blank');
     await driver.executeScript(createDom);
   });
