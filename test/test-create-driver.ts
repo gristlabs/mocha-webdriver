@@ -1,6 +1,12 @@
 import {assert, createDriver, enableDebugCapture, setOptionsModifyFunc} from '../lib';
 
 describe('createDriver', () => {
+
+  // Don't run this test on SauceLabs, where multiple drivers seem to wait for each other.
+  before(function() {
+    if (process.env.USE_SAUCE_LABS) { this.skip(); }
+  });
+
   enableDebugCapture();
 
   function createDom(name: string) {

@@ -14,3 +14,23 @@ if (process.env.MOCHA_WEBDRIVER_IGNORE_CHROME_VERSION === undefined) {
 if (!process.env.SELENIUM_BROWSER) {
   process.env.SELENIUM_BROWSER = "chrome";
 }
+
+if (process.env.USE_SAUCE_LABS) {
+  const {setOptionsModifyFunc} = require('../lib/options');
+
+  const {SAUCE_USERNAME, SAUCE_ACCESS_KEY} = process.env;
+  if (!SAUCE_USERNAME) { console.log("SAUCE_USERNAME env var not set"); process.exit(1); }
+  if (!SAUCE_ACCESS_KEY) { console.log("SAUCE_ACCESS_KEY env var not set"); process.exit(1); }
+
+  process.env.SELENIUM_REMOTE_URL =
+    `https://${SAUCE_USERNAME}:${SAUCE_ACCESS_KEY}@ondemand.us-west-1.saucelabs.com:443/wd/hub`;
+
+  setOptionsModifyFunc(({capabilities, chromeOpts, firefoxOpts}) => {
+    Object.assign(capabilities, {
+      "idleTimeout": "900",
+      "tunnelIdentifier": process.env.TRAVIS_JOB_NUMBER,
+      "recordScreenshots": "false",
+      "recordVideo": "false",
+    });
+  });
+}

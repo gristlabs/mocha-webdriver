@@ -20,7 +20,8 @@ async function addDomDelayed(waitMs: number, id: string, parentId?: string) {
   return driver.executeScript(addDom, id, parentId);
 }
 
-describe('webdriver-plus', () => {
+describe('webdriver-plus', function() {
+  this.timeout(20000);
   enableDebugCapture();
 
   describe('find methods', function() {
@@ -73,7 +74,7 @@ describe('webdriver-plus', () => {
     it('should wait for match with driver.findWait()', async function() {
       // Start waiting for the component being added, then add it after 10ms.
       const addAsync = addDomDelayed(10, 'waitForIt');
-      const [elemText] = await Promise.all([driver.findWait('#waitForIt', 1000).getText(), addAsync]);
+      const [elemText] = await Promise.all([driver.findWait('#waitForIt', 3000).getText(), addAsync]);
       assert.equal(elemText, 'Foo');
     });
 
@@ -81,7 +82,7 @@ describe('webdriver-plus', () => {
       const root = await driver.find('#id1');
       // Start waiting for the component being added, then add it after 10ms.
       const addAsync = addDomDelayed(10, 'elemWaitForIt', 'id1');
-      const [elemText] = await Promise.all([root.findWait('#elemWaitForIt', 1000).getText(), addAsync]);
+      const [elemText] = await Promise.all([root.findWait('#elemWaitForIt', 3000).getText(), addAsync]);
       assert.equal(elemText, 'Foo');
     });
 
@@ -100,7 +101,7 @@ describe('webdriver-plus', () => {
     it('should wait for matching content with driver.findContentWait()', async function() {
       // Start waiting for the component being added, then add it after 10ms.
       const addAsync = addDomDelayed(10, 'waitForContent');
-      const waitAsync = driver.findContentWait('#waitForContent', /Foo/, 1000).getText();
+      const waitAsync = driver.findContentWait('#waitForContent', /Foo/, 3000).getText();
       const [elemText] = await Promise.all([waitAsync, addAsync]);
       assert.equal(elemText, 'Foo');
     });
@@ -109,7 +110,7 @@ describe('webdriver-plus', () => {
       const root = await driver.find('#id1');
       // Start waiting for the component being added, then add it after 10ms.
       const addAsync = addDomDelayed(10, 'elemWaitForContent', 'id1');
-      const waitAsync = root.findContentWait('#elemWaitForContent', /Foo/, 1000).getText();
+      const waitAsync = root.findContentWait('#elemWaitForContent', /Foo/, 3000).getText();
       const [elemText] = await Promise.all([waitAsync, addAsync]);
       assert.equal(elemText, 'Foo');
     });
@@ -234,8 +235,8 @@ describe('webdriver-plus', () => {
 
       // isPresent() should return false for stale elements.
       await addDomDelayed(0, "acorn");
-      const acorn = await driver.findWait("#acorn", 1000);
-      assert.equal(await driver.findWait("#acorn", 1000).isPresent(), true);
+      const acorn = await driver.findWait("#acorn", 3000);
+      assert.equal(await driver.findWait("#acorn", 3000).isPresent(), true);
 
       // Remove the element from DOM.
       await driver.executeScript(function() { document.getElementById('acorn')!.remove(); });
@@ -244,7 +245,7 @@ describe('webdriver-plus', () => {
 
       // Add another idential element: for old reference, isPresent() should still be false.
       await addDomDelayed(0, "acorn");
-      assert.equal(await driver.findWait("#acorn", 1000).isPresent(), true);
+      assert.equal(await driver.findWait("#acorn", 3000).isPresent(), true);
       assert.equal(await acorn.isPresent(), false);
     });
 

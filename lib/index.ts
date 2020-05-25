@@ -7,6 +7,7 @@ import {Builder, logging, WebDriver, WebElement} from 'selenium-webdriver';
 import * as chrome from 'selenium-webdriver/chrome';
 import * as firefox from 'selenium-webdriver/firefox';
 import {getEnabledLogTypes, LogType} from './logs';
+import {optionsModifyFunc} from './options';
 import {serializeCalls} from './serialize-calls';
 import {stackWrapDriverMethods} from './stackTraces';
 import "./webdriver-plus";
@@ -29,31 +30,13 @@ export * from 'selenium-webdriver';
 export {enableDebugCapture} from './debugging';
 export {stackWrapFunc, stackWrapOwnMethods} from './stackTraces';
 export {LogType, logTypes} from './logs';
+export {IDriverOptions, OptionsModifyFunc, setOptionsModifyFunc} from './options';
 
 /**
  * Use `import {driver} from 'webdriver-mocha'. Note that it's already enhanced with extra methods
  * by "webdriver-plus" module.
  */
 export let driver: WebDriver;
-
-/**
- * To modify webdriver options, call this before mocha's before() hook. Your callback will be
- * called on driver creation with an object containing `chromeOpts` and `firefoxOpts`, and can
- * modify them in-place. E.g.
- *
- *    setOptionsModifyFunc(({chromeOpts}) => chromOpts.setUserPreferences({homepage: ...}));
- */
-export function setOptionsModifyFunc(modifyFunc: OptionsModifyFunc | null) {
-  optionsModifyFunc = modifyFunc;
-}
-
-export interface IDriverOptions {
-  capabilities: {[key: string]: string};
-  chromeOpts: chrome.Options;
-  firefoxOpts: firefox.Options;
-}
-export type OptionsModifyFunc = (opts: IDriverOptions) => void;
-let optionsModifyFunc: OptionsModifyFunc|null = null;
 
 /**
  * Use useServer() from a test suite to start an implementation of IMochaServer with the test.
@@ -156,9 +139,7 @@ export async function createDriver(options: {extraArgs?: string[]} = {}): Promis
   }
 
   const capabilities = {};
-  if (optionsModifyFunc) {
-    optionsModifyFunc({chromeOpts, firefoxOpts, capabilities});
-  }
+  optionsModifyFunc({chromeOpts, firefoxOpts, capabilities});
 
   // Recent chromedriver refuses to work with any chrome major versions other than its own. That
   // makes it very awkward for developers and tests who are not all using the same chrome version.

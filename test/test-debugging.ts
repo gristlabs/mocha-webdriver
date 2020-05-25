@@ -1,6 +1,8 @@
 import {assert, driver} from '../lib';
 
 describe('debugging', function() {
+  this.timeout(20000);
+
   before(async function() {
     // We can't really test the setting of MOCHA_WEBDRIVER_LOGTYPES here because it affects how
     // the browser driver is initialized on startup.
