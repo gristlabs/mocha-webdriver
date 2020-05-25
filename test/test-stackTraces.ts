@@ -1,4 +1,3 @@
-import * as path from 'path';
 import {assert, driver, enableDebugCapture, stackWrapFunc} from '../lib';
 import {helperFunc1, helperFunc2} from './helpers';
 
@@ -21,7 +20,7 @@ describe('stackTraces', () => {
 
   before(async function() {
     this.timeout(20000);
-    await driver.get('file://' + path.resolve(__dirname, 'blank.html'));
+    await driver.get('about:blank');
     await driver.executeScript(createDom);
   });
 

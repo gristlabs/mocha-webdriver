@@ -1,4 +1,3 @@
-import * as path from 'path';
 import {assert, createDriver, enableDebugCapture, setOptionsModifyFunc} from '../lib';
 
 describe('createDriver', () => {
@@ -13,8 +12,8 @@ describe('createDriver', () => {
     const driver1 = await createDriver();
     const driver2 = await createDriver();
     try {
-      await driver1.get('file://' + path.resolve(__dirname, 'blank.html'));
-      await driver2.get('file://' + path.resolve(__dirname, 'blank.html'));
+      await driver1.get('about:blank');
+      await driver2.get('about:blank');
       await driver1.executeScript(createDom, 'driver1');
       await driver2.executeScript(createDom, 'driver2');
       await driver1.findContentWait('body', 'driver1', 1000);
@@ -32,7 +31,7 @@ describe('createDriver', () => {
       extraArgs: ['user-agent=notscape']
     });
     try {
-      await driver.get('file://' + path.resolve(__dirname, 'blank.html'));
+      await driver.get('about:blank');
       const userAgent = await driver.executeScript('return navigator.userAgent');
       assert.equal(userAgent, 'notscape');
     } finally {
@@ -55,7 +54,7 @@ describe('createDriver', () => {
       });
       const driver = await createDriver();
       try {
-        await driver.get('file://' + path.resolve(__dirname, 'blank.html'));
+        await driver.get('about:blank');
         assert.equal(await driver.executeScript('return navigator.userAgent'), "Bond007");
       } finally {
         await driver.quit();

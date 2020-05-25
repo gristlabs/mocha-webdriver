@@ -1,5 +1,4 @@
 import {get as getColor} from 'color-string';
-import * as path from 'path';
 import {Key, WebElement} from 'selenium-webdriver';
 import {assert, driver, enableDebugCapture} from '../lib';
 
@@ -42,7 +41,7 @@ describe('webdriver-plus', () => {
 
     before(async function() {
       this.timeout(20000);
-      await driver.get('file://' + path.resolve(__dirname, 'blank.html'));
+      await driver.get('about:blank');
       await driver.executeScript(createDom);
     });
 
@@ -165,7 +164,7 @@ describe('webdriver-plus', () => {
     }
     before(async function() {
       this.timeout(20000);
-      await driver.get('file://' + path.resolve(__dirname, 'blank.html'));
+      await driver.get('about:blank');
       await driver.executeScript(createDom);
     });
 

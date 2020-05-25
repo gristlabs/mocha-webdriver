@@ -1,11 +1,10 @@
-import * as path from 'path';
 import {assert, driver} from '../lib';
 
 describe('debugging', function() {
   before(async function() {
     // We can't really test the setting of MOCHA_WEBDRIVER_LOGTYPES here because it affects how
     // the browser driver is initialized on startup.
-    await driver.get('file://' + path.resolve(__dirname, 'blank.html'));
+    await driver.get('about:blank');
   });
 
   it('should fetch requested types of logs', async function() {

@@ -10,7 +10,7 @@ describe('screenshots', function() {
   before(async function() {
     tmpDir = await fse.mkdtemp(path.join(os.tmpdir(), 'test-mw-screenshots-'));
     origScreenshotDir = process.env.MOCHA_WEBDRIVER_LOGDIR;
-    await driver.get('file://' + path.resolve(__dirname, 'blank.html'));
+    await driver.get('about:blank');
   });
 
   after(async function() {
