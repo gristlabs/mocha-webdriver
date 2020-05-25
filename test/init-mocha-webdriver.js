@@ -32,7 +32,7 @@ if (process.env.USE_SAUCE_LABS) {
       // "recordVideo": false,
       // "idleTimeout": 900,
       "name": "mocha-webdriver",
-      "build": `Commit ${process.env.TRAVIS_COMMIT} ${process.env.TRAVIS_JOB_WEB_URL}`,
+      "build": `Commit ${process.env.TRAVIS_COMMIT}`,
     });
   });
 }
