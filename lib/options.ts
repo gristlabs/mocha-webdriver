@@ -2,7 +2,7 @@ import * as chrome from 'selenium-webdriver/chrome';
 import * as firefox from 'selenium-webdriver/firefox';
 
 export interface IDriverOptions {
-  capabilities: {[key: string]: string};
+  capabilities: {[key: string]: any};
   chromeOpts: chrome.Options;
   firefoxOpts: firefox.Options;
 }

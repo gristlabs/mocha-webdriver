@@ -18,19 +18,21 @@ if (!process.env.SELENIUM_BROWSER) {
 if (process.env.USE_SAUCE_LABS) {
   const {setOptionsModifyFunc} = require('../lib/options');
 
-  const {SAUCE_USERNAME, SAUCE_ACCESS_KEY} = process.env;
-  if (!SAUCE_USERNAME) { console.log("SAUCE_USERNAME env var not set"); process.exit(1); }
-  if (!SAUCE_ACCESS_KEY) { console.log("SAUCE_ACCESS_KEY env var not set"); process.exit(1); }
+  if (!process.env.SAUCE_USERNAME) { console.log("SAUCE_USERNAME env var not set"); process.exit(1); }
+  if (!process.env.SAUCE_ACCESS_KEY) { console.log("SAUCE_ACCESS_KEY env var not set"); process.exit(1); }
 
-  process.env.SELENIUM_REMOTE_URL =
-    `https://${SAUCE_USERNAME}:${SAUCE_ACCESS_KEY}@ondemand.us-west-1.saucelabs.com:443/wd/hub`;
+  process.env.SELENIUM_REMOTE_URL = `https://ondemand.us-west-1.saucelabs.com:443/wd/hub`;
 
   setOptionsModifyFunc(({capabilities, chromeOpts, firefoxOpts}) => {
     Object.assign(capabilities, {
-      "idleTimeout": "900",
+      "username": process.env.SAUCE_USERNAME,
+      "accessKey": process.env.SAUCE_ACCESS_KEY,
       "tunnelIdentifier": process.env.TRAVIS_JOB_NUMBER,
-      "recordScreenshots": "false",
-      "recordVideo": "false",
+      // "recordScreenshots": false,
+      // "recordVideo": false,
+      // "idleTimeout": 900,
+      "name": "mocha-webdriver",
+      "build": `Commit ${process.env.TRAVIS_COMMIT} ${process.env.TRAVIS_JOB_WEB_URL}`,
     });
   });
 }
