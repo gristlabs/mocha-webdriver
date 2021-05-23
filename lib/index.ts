@@ -298,13 +298,30 @@ async function startRepl(files: string[]) {
 }
 
 // Global REPL function that reruns the i-th failed test suite.
-function rerun(files: string[], i: number = 0) {
+async function rerun(files: string[], i: number = 0) {
   const file = files[i];
   delete require.cache[file];
   const mocha = new Mocha({bail: true});
   mocha.addFile(file);
-  // This is the fromCallback() idiom without the fromCallback() helper.
-  return new Promise((resolve, reject) => mocha.run((err) => err ? reject(err) : resolve()));
+
+  const origProcessOn = ignoreUncaughtExceptionListeners(process.on);
+  try {
+    // This is the fromCallback() idiom without the fromCallback() helper.
+    await new Promise((resolve, reject) => mocha.run((err) => err ? reject(err) : resolve()));
+  } finally {
+    process.on = origProcessOn;
+  }
+}
+
+// From Node 12, node blocks usage of process.on('uncaughtException') while inside the REPL. Mocha
+// sets such a handler, which results in an exception in rerun(). To avoid it, we temporarily
+// replace `process.on` with a version that ignores calls to add 'uncaughtException' listeners.
+function ignoreUncaughtExceptionListeners(origProcessOn: any): any {
+  process.on = (evName: string, evArg: any) => {
+    if (evName === 'uncaughtException') { return; }
+    return origProcessOn.call(process, evName as any, evArg);
+  };
+  return origProcessOn;
 }
 
 // Replace REPL's eval with a version that resolves returned values and stringifies WebElements.
