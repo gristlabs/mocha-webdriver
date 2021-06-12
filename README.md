@@ -397,9 +397,3 @@ When your test code uses helper functions, stack traces may only report the loca
 helper, and not the location of the helper's caller. To get both, you need to wrap the helper with
 `stackWrapFunc()`. See also `test/helpers.ts` for an example of how to wrap an entire module of
 helpers.
-
-## Credits
-
-Browser testing platform for `mocha-webdriver` provided by [Sauce Labs](https://saucelabs.com/).
-
-[![Testing Powered By SauceLabs](https://raw.githubusercontent.com/saucelabs/opensource/master/assets/powered-by-saucelabs-badge-red.png "Testing Powered By SauceLabs")](https://saucelabs.com)
