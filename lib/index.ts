@@ -307,7 +307,7 @@ async function rerun(files: string[], i: number = 0) {
   const origProcessOn = ignoreUncaughtExceptionListeners(process.on);
   try {
     // This is the fromCallback() idiom without the fromCallback() helper.
-    await new Promise((resolve, reject) => mocha.run((err) => err ? reject(err) : resolve()));
+    await new Promise<void>((resolve, reject) => mocha.run((err) => err ? reject(err) : resolve()));
   } finally {
     process.on = origProcessOn;
   }

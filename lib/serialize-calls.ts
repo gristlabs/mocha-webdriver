@@ -18,7 +18,7 @@ export function serializeCalls<Func extends PromiseFunc>(method: Func, maxPendin
 
   // Wrapped version of the passed-in method.
   function serializedMethod(this: any, ...args: any[]) {
-    const ready = new Promise((resolve) => queue.push(resolve));
+    const ready = new Promise<void>((resolve) => queue.push(resolve));
 
     // If we can make a call immediately, checkQueue() will call the resolver, so that ready will
     // be an already-resolved promise.

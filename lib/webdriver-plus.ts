@@ -145,6 +145,9 @@ class WebElementRect implements ClientRect {
   get bottom(): number { return this.rect.y + this.rect.height; }
   get left(): number { return this.rect.x; }
   get right(): number { return this.rect.x + this.rect.width; }
+  get x(): number { return this.rect.x; }
+  get y(): number { return this.rect.y; }
+  public toJSON() { return this.rect; }
 }
 
 // A version of `new WebElementCondition` that doesn't complain about correct types.

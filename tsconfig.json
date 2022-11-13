@@ -4,6 +4,7 @@
     "strict": true,
     "noImplicitAny": true,
     "noUnusedLocals": true,
+    "useUnknownInCatchVariables": false,
     "declaration": true,
     "sourceMap": true,
     "outDir": "dist",
