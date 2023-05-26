@@ -32,9 +32,29 @@ export {LogType, logTypes} from './logs';
 
 /**
  * Use `import {driver} from 'webdriver-mocha'. Note that it's already enhanced with extra methods
- * by "webdriver-plus" module.
+ * by "webdriver-plus" module. The driver object is a proxy, since
+ * depending when exactly hooks are called it may not exist yet when
+ * the library is imported.
  */
-export let driver: WebDriver;
+export const driver: WebDriver = new Proxy({} as any, {
+  get(_, prop) {
+    if (!driver) {
+      throw new Error('WebDriver accessed before initialization');
+    }
+    return (_driver as any)[prop];
+  }
+});
+let _driver: WebDriver|undefined;
+
+/**
+ * Replace the driver. Can be useful for testing purposes.
+ * Returns the driver being replaced.
+ */
+export function setDriver(newDriver?: WebDriver): WebDriver|undefined {
+  const oldDriver = _driver;
+  _driver = newDriver;
+  return oldDriver;
+}
 
 /**
  * To modify webdriver options, call this before mocha's before() hook. Your callback will be
@@ -184,7 +204,10 @@ export async function createDriver(options: {extraArgs?: string[]} = {}): Promis
 }
 
 // Start up the webdriver and serve files that its browser will see.
-before(async function() {
+export async function beforeMochaWebdriverTests(this: Mocha.Context) {
+  // If this has already been called, there's nothing to do.
+  if (this._driver) { return; }
+
   this.timeout(20000);      // Set a longer default timeout.
 
   // Add stack trace enhancement (no-op if MOCHA_WEBDRIVER_STACKTRACES isn't set).
@@ -193,8 +216,8 @@ before(async function() {
   // Prepend node_modules/.bin to PATH, for chromedriver/geckodriver to be found.
   process.env.PATH = npmRunPath({cwd: __dirname});
 
-  driver = await createDriver();
-});
+  setDriver(await createDriver());
+}
 
 // Helper to return whether the given suite had any failures.
 function suiteFailed(ctx: Mocha.Context): boolean {
@@ -205,7 +228,9 @@ function suiteFailed(ctx: Mocha.Context): boolean {
 }
 
 // Quit the webdriver and stop serving files, unless we failed and --no-exit is given.
-after(async function() {
+export async function afterMochaWebdriverTests(this: Mocha.Context) {
+  if (!this._driver) { return; }
+
   this.timeout(6000);
   const testParent = this.test!.parent!;
   if (suiteFailed(this) && noexit) {
@@ -219,7 +244,39 @@ after(async function() {
   } else {
     await cleanup(this);
   }
-});
+  this._driver = undefined;
+}
+
+// Do not attempt to set the hooks if `before` is not defined, or if
+// a MOCHA_WORKER_ID is set (revealing that we are in a parallel job
+// managed by mocha). Both these cases arise when using mocha's parallel
+// jobs support. When running tests in parallel, hooks need to be set
+// using the exports.mochaHooks mechanism.
+if (typeof before !== 'undefined' && process.env.MOCHA_WORKER_ID === undefined) {
+  before(beforeMochaWebdriverTests);
+  if (!process.env.MOCHA_WEBDRIVER_SKIP_CLEANUP) {
+    after(afterMochaWebdriverTests);
+  }
+}
+
+// Get mocha hooks to expose as exports.mochaHooks, a newer style of
+// setting up hooks. Necessary when running tests in parallel.
+// In parallel mode, before/afterAll hooks trigger at the file level, see:
+//   https://mochajs.org/#available-root-hooks
+// That means we are starting and stopping the web driver more than is
+// strictly necessary. There aren't any hooks for when individual workers
+// start or shut down unfortunately. If you're willing to delete any
+// browser instances yourself, or they don't matter (e.g. in CI), you
+// can set MOCHA_WEBDRIVER_SKIP_CLEANUP=1 to skip that, so the browser
+// instance gets reused for different test files run by a given worker.
+export function getMochaHooks() {
+  return {
+    beforeAll: beforeMochaWebdriverTests,
+    ...(process.env.MOCHA_WEBDRIVER_SKIP_CLEANUP ? {
+      afterAll: afterMochaWebdriverTests
+    } : undefined),
+  };
+}
 
 async function cleanup(context: IMochaContext) {
   // Start all cleanup in parallel, so that hangup of driver.quit does not block other cleanup.

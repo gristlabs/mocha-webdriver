@@ -66,6 +66,11 @@ to enable, for `driver.fetchLogs()` and for `enableDebugCapture()`. Defaults to 
 value.
   - `MOCHA_WEBDRIVER_IGNORE_CHROME_VERSION`: Disable chromedriver's check that it supports the installed version of Chrome. Normally the installed chromedriver (controlled by the version in `yarn.lock`) must [match Chrome's version](https://chromedriver.chromium.org/downloads/version-selection). When tests are run by different developers and test environments, that can cause difficulties. On the other hand, incompatible behavior is rare, so this option offers a practical workaround.
   - `MOCHA_WEBDRIVER_NO_CONTROL_BANNER`: suppress the "Chrome is being controlled by automated test software" banner. This banner may cause Chrome (as of version 79) to ignore clicks immediately after loading a page.
+  - `MOCHA_WEBDRIVER_SKIP_CLEANUP`: stops the library from cleaning up the driver, or doing any of the special termination behavior. When running tests in parallel, mocha will call set up and clean up at the test file level, so there may be a speed-up possible by skipping clean up and reusing the driver within individual test worker processes. But you'll need to clean up browser processes yourself.
+
+If running mocha with `--parallel` set, the library won't be automatically
+initialized and cleaned up; you'll need to set [root hooks](https://mochajs.org/#defining-a-root-hook-plugin) to the
+values given by `getMochaHooks()`.
 
 ## Useful methods
 

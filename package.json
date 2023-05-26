@@ -9,6 +9,7 @@
     "lint": "tslint -p .",
     "prepack": "npm run build && npm run test && npm run lint",
     "test": "MOCHA_WEBDRIVER_HEADLESS=1 mocha test",
+    "test-parallel": "MOCHA_WEBDRIVER_HEADLESS=1 mocha test --parallel --jobs=4",
     "test-debug": "mocha test -b --no-exit"
   },
   "files": [
