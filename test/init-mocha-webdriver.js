@@ -14,3 +14,8 @@ if (process.env.MOCHA_WEBDRIVER_IGNORE_CHROME_VERSION === undefined) {
 if (!process.env.SELENIUM_BROWSER) {
   process.env.SELENIUM_BROWSER = "chrome";
 }
+
+if (process.env.MOCHA_WORKER_ID !== undefined) {
+  const {getMochaHooks} = require('../lib');
+  exports.mochaHooks = getMochaHooks();
+}
