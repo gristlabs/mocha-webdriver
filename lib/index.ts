@@ -38,7 +38,7 @@ export {LogType, logTypes} from './logs';
  */
 export const driver: WebDriver = new Proxy({} as any, {
   get(_, prop) {
-    if (!driver) {
+    if (!_driver) {
       throw new Error('WebDriver accessed before initialization');
     }
     return (_driver as any)[prop];
@@ -206,7 +206,7 @@ export async function createDriver(options: {extraArgs?: string[]} = {}): Promis
 // Start up the webdriver and serve files that its browser will see.
 export async function beforeMochaWebdriverTests(this: Mocha.Context) {
   // If this has already been called, there's nothing to do.
-  if (this._driver) { return; }
+  if (_driver) { return; }
 
   this.timeout(20000);      // Set a longer default timeout.
 
@@ -229,11 +229,12 @@ function suiteFailed(ctx: Mocha.Context): boolean {
 
 // Quit the webdriver and stop serving files, unless we failed and --no-exit is given.
 export async function afterMochaWebdriverTests(this: Mocha.Context) {
-  if (!this._driver) { return; }
+  if (!_driver) { return; }
 
   this.timeout(6000);
   const testParent = this.test!.parent!;
-  if (suiteFailed(this) && noexit) {
+  // special failure handling isn't ready for parallel mode.
+  if (suiteFailed(this) && noexit && process.env.MOCHA_WORKER_ID === undefined) {
     const files = new Set<string>();
     testParent.eachTest((test: any) => { if (test.state === 'failed') { files.add(test.file); }});
 
@@ -244,7 +245,7 @@ export async function afterMochaWebdriverTests(this: Mocha.Context) {
   } else {
     await cleanup(this);
   }
-  this._driver = undefined;
+  _driver = undefined;
 }
 
 // Do not attempt to set the hooks if `before` is not defined, or if
@@ -272,22 +273,23 @@ if (typeof before !== 'undefined' && process.env.MOCHA_WORKER_ID === undefined) 
 export function getMochaHooks() {
   return {
     beforeAll: beforeMochaWebdriverTests,
-    ...(process.env.MOCHA_WEBDRIVER_SKIP_CLEANUP ? {
+    ...(process.env.MOCHA_WEBDRIVER_SKIP_CLEANUP ? undefined : {
       afterAll: afterMochaWebdriverTests
-    } : undefined),
+    }),
   };
 }
 
 async function cleanup(context: IMochaContext) {
   // Start all cleanup in parallel, so that hangup of driver.quit does not block other cleanup.
   const promises: Array<Promise<void>> = [];
-  if (driver) { promises.push(driver.quit()); }
+  if (_driver) { promises.push(_driver.quit()); }
 
   // Stop all servers registered with useServer().
   promises.push(...Array.from(_servers.keys(), (server) => server.stop(context)));
 
   // Wait for all cleanup to complete.
   await Promise.all(promises);
+  _servers.clear();
 }
 
 /**
