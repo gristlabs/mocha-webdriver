@@ -1,6 +1,6 @@
 import {get as getColor} from 'color-string';
 import * as path from 'path';
-import {Key, WebElement} from 'selenium-webdriver';
+import {Key, Origin, WebElement} from 'selenium-webdriver';
 import {assert, driver, enableDebugCapture} from '../lib';
 
 function addDom(id: string, parentId?: string) {
@@ -136,9 +136,9 @@ describe('webdriver-plus', () => {
       // It's hard to test mouse motion: we do it here by using the mouse to perform text
       // selection, which we can then check with the help of executeScript().
       await driver.find(".comma").mouseMove();
-      await driver.mouseDown();
-      await driver.mouseMoveBy({x: 200});
-      await driver.mouseUp();
+      await driver.withActions((actions) => {
+        actions.press().move({origin: Origin.POINTER, x: 200}).release();
+      });
       assert.equal(await driver.executeScript(() => window.getSelection()!.toString().trim()), "World!");
     });
   });

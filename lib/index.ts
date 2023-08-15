@@ -137,7 +137,7 @@ export async function createDriver(options: {extraArgs?: string[]} = {}): Promis
 
   // Pay attention to the environment variables (documented in README).
   if (process.env.MOCHA_WEBDRIVER_HEADLESS) {
-    chromeOpts.headless();
+    chromeOpts.addArguments("--headless=new");
     firefoxOpts.headless();
   }
 
