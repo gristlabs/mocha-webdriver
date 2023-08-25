@@ -1,12 +1,8 @@
-import {Button, By, error, until, WebDriver,
+import {Actions, Button, By, error, Origin, until, WebDriver,
         WebElement, WebElementCondition, WebElementPromise} from 'selenium-webdriver';
 
 import {driverFetchLogs, LogType} from './logs';
 import {driverSaveScreenshot} from './screenshots';
-
-// TODO: This is needed for the getRect() fix (see below).
-// tslint:disable-next-line:no-var-requires
-const command = require('selenium-webdriver/lib/command');
 
 /**
  * This is implemented by both the WebDriver, and individual WebElements.
@@ -64,9 +60,8 @@ declare module "selenium-webdriver" {
     // Send keys to the window.
     sendKeys(...keys: string[]): Promise<void>;
 
-    // Helper to execute actions using new webdriver driver.actions() flow, for which typings are
-    // not currently updated (as of Jan 2019).
-    withActions(cb: (actions: any) => void): Promise<void>;
+    // Helper to execute actions using new webdriver driver.actions() flow.
+    withActions(cb: (actions: Actions) => void): Promise<void>;
 
     /**
      * Takes a screenshot, and saves it to MW_SCREENSHOT_DIR/screenshot-{N}.png if the
@@ -240,23 +235,20 @@ Object.assign(WebDriver.prototype, {
   },
 
   mouseDown(this: WebDriver, button = Button.LEFT): Promise<void> {
-    return this.withActions((actions: any) => actions.press(button));
+    return this.withActions((actions: Actions) => actions.press(button));
   },
   mouseUp(this: WebDriver, button = Button.LEFT): Promise<void> {
-    return this.withActions((actions: any) => actions.release(button));
+    return this.withActions((actions: Actions) => actions.release(button));
   },
   mouseMoveBy(this: WebDriver, params: {x?: number, y?: number} = {}): Promise<void> {
-    return this.withActions((actions: any) => actions.move({origin: 'pointer', ...params}));
+    return this.withActions((actions: Actions) => actions.move({origin: Origin.POINTER, ...params}));
   },
   sendKeys(this: WebDriver, ...keys: string[]): Promise<void> {
-    return this.withActions((actions: any) => actions.sendKeys(...keys));
+    return this.withActions((actions: Actions) => actions.sendKeys(...keys));
   },
 
-  withActions(this: WebDriver, cb: (actions: any) => void): Promise<void> {
-    // Unfortunately selenium-webdriver typings at this point (Nov'18) are one major version behind,
-    // and actions are incorrect.
-    // {bridge: true} allows support for legacy actions, currently needed for Chrome (Jan'19).
-    const actions = (this as any).actions({bridge: true});
+  withActions(this: WebDriver, cb: (actions: Actions) => void): Promise<void> {
+    const actions = this.actions();
     cb(actions);
     return actions.perform();
   },
@@ -332,24 +324,6 @@ Object.assign(WebElement.prototype, {
     return `${tagName}${idStr}${classes}[${elemId}]`;
   },
 
-  // As of 4.0.0-alpha.1, selenium-webdriver mistakenly swallows errors in getRect(). We override
-  // the implementation to fix that. TODO: Remove this when fixed in selenium-webdriver. The code
-  // below is copy pasted from selenium-webdriver's WebElement.getRect() (NOT WebDriver.getRect),
-  // but adds a `throw err` at end of catch block, which omission is clearly a mistake.
-  async getRect() {
-    try {
-      return await (this as any).execute_(new command.Command(command.Name.GET_ELEMENT_RECT));
-    } catch (err) {
-      if (err instanceof error.UnknownCommandError) {
-        const {width, height} =
-            await (this as any).execute_(new command.Command(command.Name.GET_ELEMENT_SIZE));
-        const {x, y} =
-            await (this as any).execute_(new command.Command(command.Name.GET_ELEMENT_LOCATION));
-        return {x, y, width, height};
-      }
-      throw err;
-    }
-  },
   async rect(this: WebElement): Promise<ClientRect> {
     return new WebElementRect(await this.getRect());
   },

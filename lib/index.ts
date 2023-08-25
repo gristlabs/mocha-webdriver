@@ -137,7 +137,7 @@ export async function createDriver(options: {extraArgs?: string[]} = {}): Promis
 
   // Pay attention to the environment variables (documented in README).
   if (process.env.MOCHA_WEBDRIVER_HEADLESS) {
-    chromeOpts.headless();
+    chromeOpts.addArguments("--headless=new");
     firefoxOpts.headless();
   }
 
@@ -212,9 +212,6 @@ export async function beforeMochaWebdriverTests(this: Mocha.Context) {
 
   // Add stack trace enhancement (no-op if MOCHA_WEBDRIVER_STACKTRACES isn't set).
   stackWrapDriverMethods();
-
-  // Prepend node_modules/.bin to PATH, for chromedriver/geckodriver to be found.
-  process.env.PATH = npmRunPath({cwd: __dirname});
 
   setDriver(await createDriver());
 }
