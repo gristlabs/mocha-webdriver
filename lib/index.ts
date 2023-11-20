@@ -240,8 +240,8 @@ export async function afterMochaWebdriverTests(this: Mocha.Context) {
     startRepl(Array.from(files));
   } else {
     await cleanup(this);
+    _driver = undefined;
   }
-  _driver = undefined;
 }
 
 // Do not attempt to set the hooks if `before` is not defined, or if
