@@ -124,8 +124,7 @@ export async function createDriver(options: {extraArgs?: string[]} = {}): Promis
   }
 
   const chromeOpts = new chrome.Options();
-  // Typings for Firefox options are incomplete, so supplement them with Chrome's typings.
-  const firefoxOpts = new firefox.Options() as firefox.Options & chrome.Options;
+  const firefoxOpts = new firefox.Options();
 
   // Optionally suppress the "Chrome is being controlled by automated test software" banner.
   // At the time of writing, on page reloads this can result on early clicks being missed,
@@ -137,7 +136,7 @@ export async function createDriver(options: {extraArgs?: string[]} = {}): Promis
   // Pay attention to the environment variables (documented in README).
   if (process.env.MOCHA_WEBDRIVER_HEADLESS) {
     chromeOpts.addArguments("--headless=new");
-    firefoxOpts.headless();
+    firefoxOpts.addArguments("--headless");
   }
 
   if (process.env.MOCHA_WEBDRIVER_WINSIZE) {
