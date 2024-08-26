@@ -185,11 +185,12 @@ async function createDriver(options = {}) {
     return newDriver;
 }
 exports.createDriver = createDriver;
-let _driverCreationPromise = undefined;
+let _driverCreationPromise;
 // Start up the webdriver and serve files that its browser will see.
 async function beforeMochaWebdriverTests() {
     // If this has already been called, there's nothing to do.
     if (_driver || _driverCreationPromise) {
+        await _driverCreationPromise;
         return;
     }
     this.timeout(20000); // Set a longer default timeout.
