@@ -17,18 +17,18 @@ function getTestSuiteHierarchy(test: Mocha.Runnable): Mocha.Suite[] {
 
 function sanitizeStringForFilename(name: string): string {
   return name
-      .replace(/\s/g, '-')
-      .replace(/[^A-Za-z0-9]/g, '')
-      ;
+    .replace(/\s/g, '-')
+    .replace(/[^A-Za-z0-9]/g, '')
+    ;
 }
 
 function getFilePrefixForTest(test: Mocha.Runnable): string {
   const fileName = sanitizeStringForFilename(
-      test.file ? path.basename(test.file, path.extname(test.file)) : ""
+    test.file ? path.basename(test.file, path.extname(test.file)) : ""
   );
   const suiteNames = getTestSuiteHierarchy(test)
-      .map((suite) => sanitizeStringForFilename(suite.title.trim()))
-      .filter((suite) => suite);
+    .map((suite) => sanitizeStringForFilename(suite.title.trim()))
+    .filter((suite) => suite);
 
   return `${fileName}-${suiteNames.join('-')}`;
 }
