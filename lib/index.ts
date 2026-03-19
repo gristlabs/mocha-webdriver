@@ -1,5 +1,6 @@
 import * as chai from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
+import {spawnSync} from 'child_process';
 import * as Mocha from 'mocha';
 import * as repl from 'repl';
 import {Builder, logging, WebDriver, WebElement} from 'selenium-webdriver';
@@ -111,6 +112,18 @@ export function useServer(server: IMochaServer) {
 // mocha, and we use it too to start up a REPL when this option is used.
 const noexit: boolean = process.argv.includes("--no-exit") || process.argv.includes('-E');
 
+// Find the path of a command on the current PATH.
+// Returns the resolved path, or null if not found.
+function locateExecutable(command: string): string | null {
+  const finder = process.platform === 'win32' ? 'where' : 'which';
+  const result = spawnSync(finder, [command], {encoding: 'utf8'});
+  if (result.status === 0 && result.stdout) {
+    // 'where' on Windows may return multiple matches; take the first one.
+    return result.stdout.trim().split(/\r?\n/)[0];
+  }
+  return null;
+}
+
 /**
  * Create a driver, with all command-line options applied.  Extra options can be passed
  * in as a parameter.  For example, {extraArgs: ['user-agent=notscape']} would set the
@@ -176,8 +189,14 @@ export async function createDriver(options: {extraArgs?: string[]} = {}): Promis
   // makes it very awkward for developers and tests who are not all using the same chrome version.
   // Almost always (so far) the versions are actually compatible. Enable an undocumented option to
   // skip chromedriver's version check by setting MOCHA_WEBDRIVER_IGNORE_CHROME_VERSION.
+  //
+  // In selenium-webdriver 4.x, when no executable is specified in the ServiceBuilder, it uses
+  // selenium-manager (which requires internet access) to locate the driver. To avoid this, we
+  // look for chromedriver in PATH ourselves when MOCHA_WEBDRIVER_IGNORE_CHROME_VERSION is set.
+  const chromedriverPath = locateExecutable('chromedriver');
   const chromeService = process.env.MOCHA_WEBDRIVER_IGNORE_CHROME_VERSION ?
-    new chrome.ServiceBuilder().addArguments("--disable-build-check") : null;
+    new chrome.ServiceBuilder(chromedriverPath || undefined).addArguments("--disable-build-check") :
+    (chromedriverPath ? new chrome.ServiceBuilder(chromedriverPath) : null);
 
   const newDriver = new Builder()
     .forBrowser('firefox')
