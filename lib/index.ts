@@ -176,12 +176,8 @@ export async function createDriver(options: {extraArgs?: string[]} = {}): Promis
   // makes it very awkward for developers and tests who are not all using the same chrome version.
   // Almost always (so far) the versions are actually compatible. Enable an undocumented option to
   // skip chromedriver's version check by setting MOCHA_WEBDRIVER_IGNORE_CHROME_VERSION.
-  //
-  // ServiceBuilder() will locate chromedriver on PATH, and fall back to selenium-manager if not
-  // found. We only need an explicit ServiceBuilder when passing extra arguments to chromedriver.
   const chromeService = process.env.MOCHA_WEBDRIVER_IGNORE_CHROME_VERSION ?
-    new chrome.ServiceBuilder().addArguments("--disable-build-check") :
-    null;
+    new chrome.ServiceBuilder().addArguments("--disable-build-check") : null;
 
   const newDriver = new Builder()
     .forBrowser('firefox')
