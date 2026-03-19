@@ -11,7 +11,7 @@ type PromiseFunc = (...args: any[]) => Promise<any>;
 
 export function serializeCalls<Func extends PromiseFunc>(method: Func, maxPendingCalls: number): Func {
   // Queue of all calls that haven't yet started. Calling a callback here starts the call.
-  const queue: Array<() => any> = [];
+  const queue: (() => any)[] = [];
 
   // Number of calls we've made and are waiting to get resolved.
   let running: number = 0;

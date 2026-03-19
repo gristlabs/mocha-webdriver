@@ -287,7 +287,7 @@ export function getMochaHooks() {
 
 async function cleanup(context: IMochaContext) {
   // Start all cleanup in parallel, so that hangup of driver.quit does not block other cleanup.
-  const promises: Array<Promise<void>> = [];
+  const promises: Promise<void>[] = [];
   if (_driver) { promises.push(_driver.quit()); }
 
   // Stop all servers registered with useServer().
